@@ -1,9 +1,5 @@
 <template>
     <div class="timer-wrapper">
-        <input type="text" :disabled="timerIsOn" v-model="minutes">
-        <button @click="runClock" v-show="!timerIsOn">Start</button>
-        <button @click="stopClock" v-show="timerIsOn">Stop</button>
-
         <canvas id="canvas" :width="size" :height="size" ></canvas>
     </div>
 </template>
@@ -15,6 +11,7 @@
         name: "Timer",
         data() {
             return {
+                minutes: 0,
                 timerIsOn: false,
                 canvas: null,
                 ctx: null,
@@ -22,8 +19,7 @@
                 size: 600,
                 intervalId: 0,
                 constantsColor: "#000000",
-                strokeColor: "#950703",
-                minutes: 0
+                strokeColor: "#950703"
             }
         },
         computed: {
@@ -36,10 +32,12 @@
                 this.timerIsOn = true;
                 this.endTime = DateTime.local().plus({minutes: this.minutes});
                 this.intervalId = setInterval(this.renderTime, 300);
+                this.$bus = ['clock-started'];
             },
             stopClock() {
                 this.timerIsOn = false;
-                clearInterval(this.intervalId)
+                clearInterval(this.intervalId);
+                this.$bus = ['clock-stopped'];
             },
             renderConstants() {
                 this.ctx.strokeStyle = this.constantsColor;
@@ -102,6 +100,15 @@
 
             this.endTime = DateTime.local();
             this.renderTime();
+        },
+        $bus: {
+            'start-timer'(minutes) {
+                this.minutes = minutes;
+                this.runClock();
+            },
+            'stop-timer'() {
+                this.stopClock();
+            }
         }
     }
 
