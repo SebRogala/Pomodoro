@@ -7,7 +7,6 @@
                 stateless
                 :mini-variant="miniVariant"
                 mini-variant-width="100"
-
         >
             <v-list-item v-show="false">
                 <v-list-item-content>
@@ -129,8 +128,7 @@
                 </div>
             </template>
         </v-navigation-drawer>
-        <Timer
-        />
+        <Timer :size="timerSize" />
     </div>
 </template>
 
@@ -145,6 +143,7 @@
         },
         data() {
             return {
+                timerSize: 0,
                 customTime: 0,
                 markers: 0,
                 miniVariant: false,
@@ -179,10 +178,23 @@
             },
             restartMarkers() {
                 this.markers = 0;
+            },
+            setTimerSize() {
+                let height = window.innerHeight;
+                let width = window.innerWidth - 100;
+
+                this.timerSize = height > width ? width : height;
             }
         },
         mounted() {
-            this.restartMarkers()
+            this.restartMarkers();
+            this.setTimerSize();
+        },
+        created() {
+            window.addEventListener("resize", this.setTimerSize);
+        },
+        beforeDestroy() {
+            window.removeEventListener("resize", this.setTimerSize);
         },
         $bus: {
             'clock-started'() {
@@ -194,7 +206,3 @@
         }
     };
 </script>
-
-<style lang="scss" scoped>
-
-</style>

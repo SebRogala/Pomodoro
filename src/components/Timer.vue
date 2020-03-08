@@ -1,6 +1,7 @@
 <template>
     <div class="timer-wrapper">
         <canvas id="canvas" :width="size" :height="size" ></canvas>
+        <img class="timer__background" :width="size" :src="require('@/assets/timer-background-960.png')">
     </div>
 </template>
 
@@ -9,6 +10,9 @@
 
     export default {
         name: "Timer",
+        props: {
+            size: Number | String
+        },
         data() {
             return {
                 minutes: 0,
@@ -16,7 +20,6 @@
                 canvas: null,
                 ctx: null,
                 endTime: null,
-                size: 600,
                 intervalId: 0,
                 constantsColor: "#000000",
                 strokeColor: "#950703"
@@ -24,7 +27,7 @@
         },
         computed: {
             lineWidth() {
-                return this.size * 0.4;
+                return (this.size / 2) - this.size * 0.115;
             }
         },
         methods: {
@@ -41,25 +44,11 @@
             },
             renderConstants() {
                 this.ctx.strokeStyle = this.constantsColor;
-                this.ctx.lineWidth = 1;
-
-                this.ctx.beginPath();
-                this.ctx.arc(this.size / 2, this.size / 2, this.size / 2, this.degToRad(0), this.degToRad(360));
-                this.ctx.stroke();
 
                 this.ctx.lineWidth = 10;
                 this.ctx.beginPath();
                 this.ctx.arc(this.size / 2, this.size / 2, 5, this.degToRad(0), this.degToRad(360));
                 this.ctx.stroke();
-
-
-                this.ctx.font = "36px Helvetica";
-                this.ctx.fillStyle = 'rgba(00, 0, 0, 1)'
-                this.ctx.fillText("0", 300 - 11, 46);
-                this.ctx.fillText("15", 5, 300 + 12);
-                this.ctx.fillText("30", 300 - 17, 600 - 16);
-                this.ctx.fillText("45", 600 - 53, 300 + 12);
-
             },
             renderTime(){
                 let interval = Interval.fromDateTimes(DateTime.local(), this.endTime);
@@ -96,7 +85,7 @@
             this.ctx = this.canvas.getContext("2d");
 
             // this.ctx.shadowBlur= 10;
-            // this.ctx.shadowColor = color
+            // this.ctx.shadowColor = this.strokeColor;
 
             this.endTime = DateTime.local();
             this.renderTime();
@@ -124,6 +113,9 @@
 
     #canvas {
         display: block;
-        margin-top: 30px;
+    }
+
+    .timer__background {
+        position: absolute;
     }
 </style>
