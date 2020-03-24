@@ -96,6 +96,8 @@
                 this.runClock();
             },
             'stop-timer'() {
+                this.endTime = DateTime.local();
+                this.renderTime();
                 this.stopClock();
             }
         }

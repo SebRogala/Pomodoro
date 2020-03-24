@@ -129,6 +129,17 @@
             </template>
         </v-navigation-drawer>
         <Timer :size="timerSize" />
+        <v-btn
+                :color="muteColor"
+                text
+                absolute
+                icon
+                bottom
+                left
+                @click="muted = !muted"
+        >
+            <v-icon>{{muteIcon}}</v-icon>
+        </v-btn>
     </div>
 </template>
 
@@ -141,12 +152,28 @@
         components: {
             Timer
         },
+        computed: {
+            muteIcon() {
+                if (this.muted) {
+                    return "mdi-volume-variant-off";
+                }
+                return "mdi-volume-high";
+            },
+            muteColor() {
+                if (this.miniVariant) {
+                    return "grey lighten-1";
+                }
+                return "grey darken-2";
+            }
+        },
         data() {
             return {
                 timerSize: 0,
                 customTime: 0,
                 markers: 0,
                 miniVariant: false,
+                muted: true,
+                ringingSound: null,
                 items: [
                     {title: 'Dashboard', icon: 'mdi-view-dashboard'},
                     {title: 'Photos', icon: 'mdi-image'},
@@ -171,6 +198,7 @@
             },
             timerStopped() {
                 // this.markers++;
+                this.playFinishedSound();
                 this.miniVariant = false;
             },
             timerStarted() {
@@ -184,9 +212,15 @@
                 let width = window.innerWidth - 100;
 
                 this.timerSize = height > width ? width : height;
-            }
+            },
+            playFinishedSound() {
+                if (this.ringingSound && !this.muted) {
+                    this.ringingSound.play();
+                }
+            },
         },
         mounted() {
+            this.ringingSound = new Audio(require("@/assets/timer-finish-ring.mp3"));
             this.restartMarkers();
             this.setTimerSize();
         },
