@@ -1,22 +1,14 @@
 <template>
     <div class="timer">
         <v-navigation-drawer
-                permanent
                 absolute
                 right
                 stateless
-                :mini-variant="miniVariant"
-                mini-variant-width="100"
+                v-model="navOpen"
+                width="200"
+                :mini-variant="false"
         >
-            <v-list-item v-show="false">
-                <v-list-item-content>
-                    <v-list-item-title>Application</v-list-item-title>
-                    <v-list-item-subtitle>Subtext</v-list-item-subtitle>
-                </v-list-item-content>
-            </v-list-item>
             <v-list-item>
-                <v-list-item-icon />
-
                 <v-list-item-content>
                     <v-list-item-title>
                         <v-btn
@@ -30,8 +22,6 @@
                 </v-list-item-content>
             </v-list-item>
             <v-list-item>
-                <v-list-item-icon />
-
                 <v-list-item-content>
                     <v-list-item-title>
                         <v-btn
@@ -45,8 +35,6 @@
                 </v-list-item-content>
             </v-list-item>
             <v-list-item>
-                <v-list-item-icon />
-
                 <v-list-item-content>
                     <v-list-item-title>
                         <v-btn
@@ -61,8 +49,6 @@
             </v-list-item>
 
             <v-list-item>
-                <v-list-item-icon />
-
                 <v-list-item-content>
                     <v-list-item-title>
                         <v-text-field
@@ -89,8 +75,6 @@
             <v-divider></v-divider>
 
             <v-list-item>
-                <v-list-item-icon />
-
                 <v-list-item-content>
                     <v-list-item-title>
                         <v-badge
@@ -113,21 +97,16 @@
             </v-list-item>
 
 
-            <template v-slot:append>
-                <div class="pa-2" v-show="miniVariant">
-                    <v-btn
-                            @click="stopTimer"
-                            block
-                            outlined
-                            tile
-                            color="red darken-2"
-                    >Stop</v-btn>
-                    <v-btn v-show="false" block @click="miniVariant = !miniVariant">
-                        <v-icon>mdi-transfer-{{miniVariant ? "left" : "right"}}</v-icon>
-                    </v-btn>
-                </div>
-            </template>
         </v-navigation-drawer>
+        <v-btn
+                color="red darken-2"
+                absolute
+                outlined
+                bottom
+                right
+                tile
+                @click="stopTimer"
+        >Stop</v-btn>
         <Timer :size="timerSize" />
         <v-btn
                 :color="muteColor"
@@ -160,10 +139,10 @@
                 return "mdi-volume-high";
             },
             muteColor() {
-                if (this.miniVariant) {
-                    return "grey lighten-1";
+                if (this.navOpen) {
+                    return "grey darken-2";
                 }
-                return "grey darken-2";
+                return "grey lighten-1";
             }
         },
         data() {
@@ -171,14 +150,9 @@
                 timerSize: 0,
                 customTime: 0,
                 markers: 0,
-                miniVariant: false,
+                navOpen: true,
                 muted: true,
                 ringingSound: null,
-                items: [
-                    {title: 'Dashboard', icon: 'mdi-view-dashboard'},
-                    {title: 'Photos', icon: 'mdi-image'},
-                    {title: 'About', icon: 'mdi-help-box'},
-                ],
             }
         },
         methods: {
@@ -199,17 +173,17 @@
             timerStopped() {
                 // this.markers++;
                 this.playFinishedSound();
-                this.miniVariant = false;
+                this.navOpen = true;
             },
             timerStarted() {
-                this.miniVariant = true;
+                this.navOpen = false;
             },
             restartMarkers() {
                 this.markers = 0;
             },
             setTimerSize() {
                 let height = window.innerHeight;
-                let width = window.innerWidth - 100;
+                let width = window.innerWidth;
 
                 this.timerSize = height > width ? width : height;
             },
