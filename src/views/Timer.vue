@@ -11,6 +11,30 @@
             <v-list-item>
                 <v-list-item-content>
                     <v-list-item-title>
+                        <v-text-field
+                                v-model="customTime"
+                                color="green darken-2"
+                                dense
+                                clearable
+                                outlined
+                                hide-details
+                                @blur="clearCustomTime"
+                        ></v-text-field>
+                        <v-btn
+                                class="mt-2 mb-5"
+                                @click="startCustom"
+                                block
+                                outlined
+                                tile
+                                color="green darken-2"
+                        >Start</v-btn>
+                    </v-list-item-title>
+                </v-list-item-content>
+            </v-list-item>
+
+            <v-list-item>
+                <v-list-item-content>
+                    <v-list-item-title>
                         <v-btn
                                 @click="triggerTimer(5)"
                                 block
@@ -44,30 +68,6 @@
                                 tile
                                 color="blue darken-2"
                         >30</v-btn>
-                    </v-list-item-title>
-                </v-list-item-content>
-            </v-list-item>
-
-            <v-list-item>
-                <v-list-item-content>
-                    <v-list-item-title>
-                        <v-text-field
-                                class="mb-2 mt-5"
-                                v-model="customTime"
-                                color="green darken-2"
-                                dense
-                                clearable
-                                outlined
-                                hide-details
-                                @blur="clearCustomTime"
-                        ></v-text-field>
-                        <v-btn
-                                @click="startCustom"
-                                block
-                                outlined
-                                tile
-                                color="green darken-2"
-                        >Start</v-btn>
                     </v-list-item-title>
                 </v-list-item-content>
             </v-list-item>
