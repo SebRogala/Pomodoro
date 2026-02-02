@@ -1,0 +1,16 @@
+{
+  "timer": {
+    "start": "Start",
+    "stop": "Stop",
+    "resetMarkers": "Wyczyść znaczniki"
+  },
+  "settings": {
+    "sound": "Dźwięk",
+    "keepScreenOn": "Nie wyłączaj ekranu",
+    "language": "Język"
+  },
+  "languages": {
+    "en": "English",
+    "pl": "Polski"
+  }
+}

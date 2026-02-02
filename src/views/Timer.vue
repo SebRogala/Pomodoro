@@ -23,7 +23,7 @@
             block
             variant="outlined"
             color="green-darken-2"
-          >Start</v-btn>
+          >{{ $t('timer.start') }}</v-btn>
         </v-list-item>
 
         <v-list-item>
@@ -70,7 +70,7 @@
             block
             variant="outlined"
             color="orange-accent-3"
-          >Reset markers</v-btn>
+          >{{ $t('timer.resetMarkers') }}</v-btn>
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
@@ -80,7 +80,7 @@
       style="position: absolute; bottom: 16px; right: 16px;"
       variant="outlined"
       @click="stopTimer"
-    >Stop</v-btn>
+    >{{ $t('timer.stop') }}</v-btn>
 
     <TimerComponent :size="timerSize" />
 
@@ -102,6 +102,16 @@
       @click="settings.toggleKeepScreenOn()"
     >
       <v-icon>{{ screenLockIcon }}</v-icon>
+    </v-btn>
+
+    <v-btn
+      :color="langColor"
+      variant="text"
+      icon
+      style="position: absolute; bottom: 16px; left: 112px;"
+      @click="toggleLanguage"
+    >
+      <span style="font-size: 12px; font-weight: bold;">{{ langLabel }}</span>
     </v-btn>
   </div>
 </template>
@@ -144,6 +154,19 @@ export default {
       }
       return navOpen.value ? 'grey-darken-2' : 'grey-lighten-1'
     })
+
+    const langLabel = computed(() => {
+      return settings.language.toUpperCase()
+    })
+
+    const langColor = computed(() => {
+      return navOpen.value ? 'grey-darken-2' : 'grey-lighten-1'
+    })
+
+    const toggleLanguage = () => {
+      const newLang = settings.language === 'en' ? 'pl' : 'en'
+      settings.setLanguage(newLang)
+    }
 
     const clearCustomTime = () => {
       if (isNaN(customTime.value) || !customTime.value) {
@@ -215,6 +238,9 @@ export default {
       muteColor,
       screenLockIcon,
       screenLockColor,
+      langLabel,
+      langColor,
+      toggleLanguage,
       clearCustomTime,
       startCustom,
       triggerTimer,
