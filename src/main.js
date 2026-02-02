@@ -1,17 +1,25 @@
-import Vue from "vue";
-import App from "./App.vue";
-import "./registerServiceWorker";
-import router from "./router";
-import store from "./store";
-import vuetify from './plugins/vuetify';
-import VueBus from './plugins/vue-bus'
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import App from './App.vue'
+import router from './router'
+import vuetify from './plugins/vuetify'
+import mitt from 'mitt'
 
-Vue.config.productionTip = false;
-Vue.use(VueBus);
+// Create event bus
+const emitter = mitt()
 
-new Vue({
-    router,
-    store,
-    vuetify,
-    render: h => h(App)
-}).$mount("#app");
+const app = createApp(App)
+
+const pinia = createPinia()
+pinia.use(piniaPluginPersistedstate)
+
+app.use(pinia)
+app.use(router)
+app.use(vuetify)
+
+// Provide event bus globally
+app.config.globalProperties.$bus = emitter
+app.provide('bus', emitter)
+
+app.mount('#app')
