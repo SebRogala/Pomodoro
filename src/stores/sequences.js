@@ -1,8 +1,12 @@
 import { defineStore } from 'pinia'
 
+// Current migration version - increment when adding new defaults
+const CURRENT_MIGRATION_VERSION = 1
+
 export const useSequencesStore = defineStore('sequences', {
   state: () => ({
     sequences: [],
+    migrationVersion: 0,
 
     // Active sequence state
     activeSequenceId: null,
@@ -75,7 +79,22 @@ export const useSequencesStore = defineStore('sequences', {
     updateSequence(id, updates) {
       const index = this.sequences.findIndex(s => s.id === id)
       if (index !== -1) {
-        this.sequences[index] = { ...this.sequences[index], ...updates }
+        const updated = { ...this.sequences[index], ...updates }
+        // Remove keys explicitly set to undefined (for removing nameKey on edit)
+        Object.keys(updated).forEach(key => {
+          if (updated[key] === undefined) delete updated[key]
+        })
+        // Also clean up steps
+        if (updated.steps) {
+          updated.steps = updated.steps.map(step => {
+            const cleanStep = { ...step }
+            Object.keys(cleanStep).forEach(key => {
+              if (cleanStep[key] === undefined) delete cleanStep[key]
+            })
+            return cleanStep
+          })
+        }
+        this.sequences[index] = updated
       }
     },
 
@@ -188,78 +207,81 @@ export const useSequencesStore = defineStore('sequences', {
       return false
     },
 
-    // Initialize default sequences
+    // Run migrations to add default sequences
+    runMigrations() {
+      if (this.migrationVersion >= CURRENT_MIGRATION_VERSION) return
+
+      // Migration 1: Initial default sequences (only if no sequences exist yet)
+      if (this.migrationVersion < 1 && this.sequences.length === 0) {
+        const defaults = [
+          {
+            nameKey: 'defaults.softBoiledEgg',
+            category: 'cooking',
+            steps: [{ id: '1', nameKey: 'defaults.steps.boil', duration: 360 }],
+            repeatCount: 1
+          },
+          {
+            nameKey: 'defaults.mediumBoiledEgg',
+            category: 'cooking',
+            steps: [{ id: '1', nameKey: 'defaults.steps.boil', duration: 480 }],
+            repeatCount: 1
+          },
+          {
+            nameKey: 'defaults.hardBoiledEgg',
+            category: 'cooking',
+            steps: [{ id: '1', nameKey: 'defaults.steps.boil', duration: 720 }],
+            repeatCount: 1
+          },
+          {
+            nameKey: 'defaults.dumplings',
+            category: 'cooking',
+            steps: [{ id: '1', nameKey: 'defaults.steps.boilBatch', duration: 90 }],
+            repeatCount: 0
+          },
+          {
+            nameKey: 'defaults.steakMedium',
+            category: 'cooking',
+            steps: [
+              { id: '1', nameKey: 'defaults.steps.sideA', duration: 180 },
+              { id: '2', nameKey: 'defaults.steps.sideB', duration: 180 },
+              { id: '3', nameKey: 'defaults.steps.rest', duration: 60 }
+            ],
+            repeatCount: 1
+          },
+          {
+            nameKey: 'defaults.classicPomodoro',
+            category: 'productivity',
+            steps: [
+              { id: '1', nameKey: 'defaults.steps.focus', duration: 1500 },
+              { id: '2', nameKey: 'defaults.steps.break', duration: 300 }
+            ],
+            repeatCount: 4
+          },
+          {
+            nameKey: 'defaults.quickFocus',
+            category: 'productivity',
+            steps: [
+              { id: '1', nameKey: 'defaults.steps.focus', duration: 900 },
+              { id: '2', nameKey: 'defaults.steps.break', duration: 180 }
+            ],
+            repeatCount: 1
+          }
+        ]
+
+        defaults.forEach(seq => this.addSequence(seq))
+      }
+
+      this.migrationVersion = CURRENT_MIGRATION_VERSION
+    },
+
+    // Legacy alias for backwards compatibility
     initDefaults() {
-      if (this.sequences.length > 0) return
-
-      const defaults = [
-        {
-          name: 'Soft Boiled Egg',
-          category: 'cooking',
-          steps: [{ id: '1', name: 'Boil', duration: 360 }],
-          repeatCount: 1,
-          isDefault: true
-        },
-        {
-          name: 'Medium Boiled Egg',
-          category: 'cooking',
-          steps: [{ id: '1', name: 'Boil', duration: 480 }],
-          repeatCount: 1,
-          isDefault: true
-        },
-        {
-          name: 'Hard Boiled Egg',
-          category: 'cooking',
-          steps: [{ id: '1', name: 'Boil', duration: 720 }],
-          repeatCount: 1,
-          isDefault: true
-        },
-        {
-          name: 'Dumplings',
-          category: 'cooking',
-          steps: [{ id: '1', name: 'Boil batch', duration: 90 }],
-          repeatCount: 0, // infinite
-          isDefault: true
-        },
-        {
-          name: 'Steak (Medium)',
-          category: 'cooking',
-          steps: [
-            { id: '1', name: 'Side A', duration: 180 },
-            { id: '2', name: 'Side B', duration: 180 },
-            { id: '3', name: 'Rest', duration: 60 }
-          ],
-          repeatCount: 1,
-          isDefault: true
-        },
-        {
-          name: 'Classic Pomodoro',
-          category: 'productivity',
-          steps: [
-            { id: '1', name: 'Focus', duration: 1500 },
-            { id: '2', name: 'Break', duration: 300 }
-          ],
-          repeatCount: 4,
-          isDefault: true
-        },
-        {
-          name: 'Quick Focus',
-          category: 'productivity',
-          steps: [
-            { id: '1', name: 'Focus', duration: 900 },
-            { id: '2', name: 'Break', duration: 180 }
-          ],
-          repeatCount: 1,
-          isDefault: true
-        }
-      ]
-
-      defaults.forEach(seq => this.addSequence(seq))
+      this.runMigrations()
     }
   },
 
   persist: {
-    pick: ['sequences'] // Only persist sequences, not active state
+    pick: ['sequences', 'migrationVersion'] // Persist sequences and migration state, not active playback state
   }
 })
 
@@ -287,4 +309,12 @@ export function formatDuration(seconds) {
   const mins = Math.floor(seconds / 60)
   const secs = seconds % 60
   return `${mins}m ${secs}s`
+}
+
+// Get display name for sequence or step (handles translation keys)
+export function getDisplayName(item, t) {
+  if (!item) return ''
+  if (item.name) return item.name
+  if (item.nameKey) return t(`sequences.${item.nameKey}`)
+  return ''
 }

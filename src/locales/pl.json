@@ -34,7 +34,28 @@
     "pause": "Pauza",
     "resume": "Wznów",
     "skip": "Pomiń",
-    "stop": "Stop"
+    "stop": "Stop",
+    "deleteConfirm": "Usunąć \"{name}\"?",
+    "deleteConfirmText": "Tej akcji nie można cofnąć.",
+    "delete": "Usuń",
+    "defaults": {
+      "softBoiledEgg": "Jajko na miękko",
+      "mediumBoiledEgg": "Jajko na średnio",
+      "hardBoiledEgg": "Jajko na twardo",
+      "dumplings": "Pierogi",
+      "steakMedium": "Stek (medium)",
+      "classicPomodoro": "Klasyczne Pomodoro",
+      "quickFocus": "Szybki fokus",
+      "steps": {
+        "boil": "Gotuj",
+        "boilBatch": "Gotuj porcję",
+        "sideA": "Strona A",
+        "sideB": "Strona B",
+        "rest": "Odpocznij",
+        "focus": "Praca",
+        "break": "Przerwa"
+      }
+    }
   },
   "editor": {
     "newSequence": "Nowa sekwencja",

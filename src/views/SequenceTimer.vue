@@ -23,7 +23,7 @@
             </v-icon>
           </template>
 
-          <v-list-item-title>{{ seq.name }}</v-list-item-title>
+          <v-list-item-title>{{ getName(seq) }}</v-list-item-title>
           <v-list-item-subtitle>
             {{ seq.steps.length }} {{ seq.steps.length !== 1 ? $t('sequences.steps_plural') : $t('sequences.step') }}
             <span v-if="seq.repeatCount === 0"> ({{ $t('sequences.repeat') }})</span>
@@ -37,6 +37,9 @@
               </v-btn>
               <v-btn icon variant="text" size="small" @click.stop="editSequence(seq)">
                 <v-icon>mdi-pencil</v-icon>
+              </v-btn>
+              <v-btn icon variant="text" size="small" color="red-darken-2" @click.stop="confirmDelete(seq)">
+                <v-icon>mdi-delete</v-icon>
               </v-btn>
             </div>
           </template>
@@ -61,15 +64,15 @@
       <div v-if="store.waitingForConfirm" class="confirm-screen text-center pa-4">
         <v-icon size="64" color="green-darken-2" class="mb-4">mdi-check-circle</v-icon>
         <h2 class="text-h5 mb-2">{{ $t('sequences.stepComplete') }}</h2>
-        <p class="text-h6 mb-4">{{ store.currentStep?.name }}</p>
+        <p class="text-h6 mb-4">{{ getName(store.currentStep) }}</p>
 
         <div v-if="store.nextStep" class="next-step mb-6">
           <p class="text-subtitle-1 text-grey">{{ $t('sequences.next') }}</p>
-          <p class="text-h6">{{ store.nextStep.name }} - {{ formatDuration(store.nextStep.duration) }}</p>
+          <p class="text-h6">{{ getName(store.nextStep) }} - {{ formatDuration(store.nextStep.duration) }}</p>
         </div>
         <div v-else-if="hasMoreRepeats" class="next-step mb-6">
           <p class="text-subtitle-1 text-grey">{{ $t('sequences.repeatOf', { current: store.currentRepeat + 1, total: store.activeSequence?.repeatCount || '∞' }) }}</p>
-          <p class="text-h6">{{ store.activeSequence?.steps[0]?.name }} - {{ formatDuration(store.activeSequence?.steps[0]?.duration) }}</p>
+          <p class="text-h6">{{ getName(store.activeSequence?.steps[0]) }} - {{ formatDuration(store.activeSequence?.steps[0]?.duration) }}</p>
         </div>
 
         <v-btn
@@ -90,7 +93,7 @@
       <div v-else-if="store.isComplete" class="complete-screen text-center pa-4">
         <v-icon size="64" color="green-darken-2" class="mb-4">mdi-trophy</v-icon>
         <h2 class="text-h5 mb-2">{{ $t('sequences.sequenceComplete') }}</h2>
-        <p class="text-h6 mb-6">{{ store.activeSequence?.name }}</p>
+        <p class="text-h6 mb-6">{{ getName(store.activeSequence) }}</p>
 
         <v-btn
           color="green-darken-2"
@@ -114,7 +117,7 @@
               ({{ $t('sequences.round', { current: store.currentRepeat, total: store.activeSequence?.repeatCount > 0 ? store.activeSequence.repeatCount : '∞' }) }})
             </span>
           </p>
-          <h2 class="text-h4 mb-4">{{ store.currentStep?.name }}</h2>
+          <h2 class="text-h4 mb-4">{{ getName(store.currentStep) }}</h2>
           <p class="time-display text-h1 font-weight-bold">{{ formattedTime }}</p>
         </div>
 
@@ -306,7 +309,7 @@
       <v-card>
         <v-card-title>{{ $t('import.title') }}</v-card-title>
         <v-card-text v-if="importedSequence">
-          <p class="mb-2"><strong>{{ importedSequence.name }}</strong></p>
+          <p class="mb-2"><strong>{{ getName(importedSequence) }}</strong></p>
           <p class="text-body-2 text-grey mb-2">
             {{ importedSequence.steps.length }} {{ importedSequence.steps.length !== 1 ? $t('sequences.steps_plural') : $t('sequences.step') }}
             <span v-if="importedSequence.repeatCount === 0"> ({{ $t('sequences.repeat') }})</span>
@@ -314,7 +317,7 @@
           </p>
           <v-list density="compact">
             <v-list-item v-for="step in importedSequence.steps" :key="step.id">
-              <v-list-item-title>{{ step.name }} - {{ formatDuration(step.duration) }}</v-list-item-title>
+              <v-list-item-title>{{ getName(step) }} - {{ formatDuration(step.duration) }}</v-list-item-title>
             </v-list-item>
           </v-list>
         </v-card-text>
@@ -322,6 +325,19 @@
           <v-spacer></v-spacer>
           <v-btn variant="text" @click="cancelImport">{{ $t('import.cancel') }}</v-btn>
           <v-btn color="green-darken-2" @click="confirmImport">{{ $t('import.import') }}</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Delete Confirmation Dialog -->
+    <v-dialog v-model="showDeleteDialog" max-width="350">
+      <v-card>
+        <v-card-title>{{ $t('sequences.deleteConfirm', { name: getName(sequenceToDelete) }) }}</v-card-title>
+        <v-card-text>{{ $t('sequences.deleteConfirmText') }}</v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="cancelDelete">{{ $t('editor.cancel') }}</v-btn>
+          <v-btn color="red-darken-2" @click="deleteSequence">{{ $t('sequences.delete') }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -336,14 +352,14 @@
 <script>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useSequencesStore, formatDuration, parseTimeInput } from '@/stores/sequences'
+import { useSequencesStore, formatDuration, parseTimeInput, getDisplayName } from '@/stores/sequences'
 import { useSettingsControls } from '@/composables/useSettingsControls'
 import { getSequenceFromCurrentUrl, clearSequenceFromUrl, copySequenceUrl } from '@/utils/sequenceUrl'
 
 export default {
   name: 'SequenceTimer',
   setup() {
-    const { t } = useI18n()
+    const { t, locale } = useI18n()
     const store = useSequencesStore()
     const {
       settings,
@@ -365,6 +381,8 @@ export default {
     const importedSequence = ref(null)
     const showSnackbar = ref(false)
     const snackbarText = ref('')
+    const showDeleteDialog = ref(false)
+    const sequenceToDelete = ref(null)
 
     const editorForm = ref({
       name: '',
@@ -375,6 +393,8 @@ export default {
     })
 
     const filteredSequences = computed(() => {
+      // Access locale.value to make this reactive to language changes
+      const _ = locale.value
       return store.sequences.filter(s => s.category === activeTab.value)
     })
 
@@ -409,6 +429,9 @@ export default {
       { title: t('sequences.productivity'), value: 'productivity' }
     ])
 
+    // Helper to get translated name for sequence or step
+    const getName = (item) => getDisplayName(item, t)
+
     const shareSequence = async (seq) => {
       const success = await copySequenceUrl(seq)
       snackbarText.value = success ? t('share.copied') : t('share.failed')
@@ -438,6 +461,24 @@ export default {
       clearSequenceFromUrl()
     }
 
+    const confirmDelete = (seq) => {
+      sequenceToDelete.value = seq
+      showDeleteDialog.value = true
+    }
+
+    const deleteSequence = () => {
+      if (sequenceToDelete.value) {
+        store.deleteSequence(sequenceToDelete.value.id)
+      }
+      showDeleteDialog.value = false
+      sequenceToDelete.value = null
+    }
+
+    const cancelDelete = () => {
+      showDeleteDialog.value = false
+      sequenceToDelete.value = null
+    }
+
     const startSequence = (id) => {
       store.startSequence(id)
     }
@@ -456,13 +497,13 @@ export default {
     const editSequence = (seq) => {
       editingSequence.value = seq
       editorForm.value = {
-        name: seq.name,
+        name: getName(seq),
         category: seq.category || 'cooking',
         repeatCount: seq.repeatCount || 1,
         autoAdvance: seq.autoAdvance || false,
         steps: seq.steps.map(s => ({
           id: s.id,
-          name: s.name,
+          name: getName(s),
           durationInput: formatDuration(s.duration)
         }))
       }
@@ -499,6 +540,7 @@ export default {
         .map(s => ({
           id: s.id,
           name: s.name,
+          nameKey: undefined, // Remove translation key when user edits
           duration: parseTimeInput(s.durationInput) || 60
         }))
 
@@ -506,6 +548,7 @@ export default {
 
       const data = {
         name: editorForm.value.name,
+        nameKey: undefined, // Remove translation key when user edits
         category: editorForm.value.category,
         repeatCount: parseInt(editorForm.value.repeatCount) || 1,
         autoAdvance: editorForm.value.autoAdvance,
@@ -562,6 +605,7 @@ export default {
       hasMoreRepeats,
       categoryOptions,
       formatDuration,
+      getName,
       startSequence,
       restartSequence,
       skipStep,
@@ -582,7 +626,12 @@ export default {
       confirmImport,
       cancelImport,
       showSnackbar,
-      snackbarText
+      snackbarText,
+      showDeleteDialog,
+      sequenceToDelete,
+      confirmDelete,
+      deleteSequence,
+      cancelDelete
     }
   }
 }

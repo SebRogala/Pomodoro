@@ -34,7 +34,28 @@
     "pause": "Pause",
     "resume": "Resume",
     "skip": "Skip",
-    "stop": "Stop"
+    "stop": "Stop",
+    "deleteConfirm": "Delete \"{name}\"?",
+    "deleteConfirmText": "This action cannot be undone.",
+    "delete": "Delete",
+    "defaults": {
+      "softBoiledEgg": "Soft Boiled Egg",
+      "mediumBoiledEgg": "Medium Boiled Egg",
+      "hardBoiledEgg": "Hard Boiled Egg",
+      "dumplings": "Dumplings",
+      "steakMedium": "Steak (Medium)",
+      "classicPomodoro": "Classic Pomodoro",
+      "quickFocus": "Quick Focus",
+      "steps": {
+        "boil": "Boil",
+        "boilBatch": "Boil batch",
+        "sideA": "Side A",
+        "sideB": "Side B",
+        "rest": "Rest",
+        "focus": "Focus",
+        "break": "Break"
+      }
+    }
   },
   "editor": {
     "newSequence": "New Sequence",
