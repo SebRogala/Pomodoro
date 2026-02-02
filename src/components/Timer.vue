@@ -8,6 +8,8 @@
 <script>
 import { inject, ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { DateTime, Interval } from 'luxon'
+import { useSettingsStore } from '@/stores/settings'
+import { useWakeLock } from '@/composables/useWakeLock'
 import timerBackgroundImg from '@/assets/timer-background-960.png'
 
 export default {
@@ -20,6 +22,8 @@ export default {
   },
   setup(props) {
     const bus = inject('bus')
+    const settings = useSettingsStore()
+    const wakeLock = useWakeLock()
 
     const minutes = ref(0)
     const timerIsOn = ref(false)
@@ -72,16 +76,26 @@ export default {
       renderConstants()
     }
 
-    const runClock = () => {
+    const runClock = async () => {
       timerIsOn.value = true
       endTime.value = DateTime.local().plus({ minutes: minutes.value })
       intervalId.value = setInterval(renderTime, 300)
+
+      // Acquire wake lock if enabled
+      if (settings.keepScreenOn) {
+        await wakeLock.acquire()
+      }
+
       bus.emit('clock-started')
     }
 
-    const stopClock = () => {
+    const stopClock = async () => {
       timerIsOn.value = false
       clearInterval(intervalId.value)
+
+      // Release wake lock
+      await wakeLock.release()
+
       bus.emit('clock-stopped')
     }
 
@@ -96,6 +110,13 @@ export default {
       stopClock()
     }
 
+    // Re-acquire wake lock when page becomes visible
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible' && timerIsOn.value && settings.keepScreenOn) {
+        await wakeLock.acquire()
+      }
+    }
+
     onMounted(() => {
       ctx.value = canvasRef.value.getContext('2d')
       endTime.value = DateTime.local()
@@ -103,12 +124,15 @@ export default {
 
       bus.on('start-timer', onStartTimer)
       bus.on('stop-timer', onStopTimer)
+
+      document.addEventListener('visibilitychange', handleVisibilityChange)
     })
 
     onBeforeUnmount(() => {
       clearInterval(intervalId.value)
       bus.off('start-timer', onStartTimer)
       bus.off('stop-timer', onStopTimer)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     })
 
     return {

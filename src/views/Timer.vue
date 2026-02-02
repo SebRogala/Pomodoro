@@ -93,6 +93,16 @@
     >
       <v-icon>{{ muteIcon }}</v-icon>
     </v-btn>
+
+    <v-btn
+      :color="screenLockColor"
+      variant="text"
+      icon
+      style="position: absolute; bottom: 16px; left: 64px;"
+      @click="settings.toggleKeepScreenOn()"
+    >
+      <v-icon>{{ screenLockIcon }}</v-icon>
+    </v-btn>
   </div>
 </template>
 
@@ -121,6 +131,17 @@ export default {
     })
 
     const muteColor = computed(() => {
+      return navOpen.value ? 'grey-darken-2' : 'grey-lighten-1'
+    })
+
+    const screenLockIcon = computed(() => {
+      return settings.keepScreenOn ? 'mdi-cellphone' : 'mdi-cellphone-off'
+    })
+
+    const screenLockColor = computed(() => {
+      if (settings.keepScreenOn) {
+        return 'green-darken-2'
+      }
       return navOpen.value ? 'grey-darken-2' : 'grey-lighten-1'
     })
 
@@ -192,6 +213,8 @@ export default {
       navOpen,
       muteIcon,
       muteColor,
+      screenLockIcon,
+      screenLockColor,
       clearCustomTime,
       startCustom,
       triggerTimer,

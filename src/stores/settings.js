@@ -2,9 +2,9 @@ import { defineStore } from 'pinia'
 
 export const useSettingsStore = defineStore('settings', {
   state: () => ({
-    muted: true,
+    muted: false,
     lastUsedTime: 25,
-    keepScreenOn: false,
+    keepScreenOn: true,
     notificationsEnabled: false,
     language: 'en'
   }),
