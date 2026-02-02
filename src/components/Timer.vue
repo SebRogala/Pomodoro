@@ -110,10 +110,16 @@ export default {
       stopClock()
     }
 
-    // Re-acquire wake lock when page becomes visible
+    // Handle visibility change - sync timer and re-acquire wake lock
     const handleVisibilityChange = async () => {
-      if (document.visibilityState === 'visible' && timerIsOn.value && settings.keepScreenOn) {
-        await wakeLock.acquire()
+      if (document.visibilityState === 'visible' && timerIsOn.value) {
+        // Force re-render to sync display with actual time
+        renderTime()
+
+        // Re-acquire wake lock if enabled (if timer still running after renderTime)
+        if (timerIsOn.value && settings.keepScreenOn) {
+          await wakeLock.acquire()
+        }
       }
     }
 
