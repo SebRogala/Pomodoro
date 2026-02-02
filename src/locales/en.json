@@ -11,5 +11,57 @@
   "languages": {
     "en": "English",
     "pl": "Polski"
+  },
+  "sequences": {
+    "title": "Sequences",
+    "cooking": "Cooking",
+    "productivity": "Productivity",
+    "steps": "Steps",
+    "step": "step",
+    "steps_plural": "steps",
+    "repeat": "repeat",
+    "createNew": "Create New",
+    "stepComplete": "Step Complete!",
+    "sequenceComplete": "Sequence Complete!",
+    "next": "Next:",
+    "repeatOf": "Repeat {current} of {total}",
+    "startNext": "Start Next",
+    "stopSequence": "Stop Sequence",
+    "startAgain": "Start Again",
+    "chooseAnother": "Choose Another",
+    "stepOf": "Step {current} of {total}",
+    "round": "Round {current}/{total}",
+    "pause": "Pause",
+    "resume": "Resume",
+    "skip": "Skip",
+    "stop": "Stop"
+  },
+  "editor": {
+    "newSequence": "New Sequence",
+    "editSequence": "Edit Sequence",
+    "sequenceName": "Sequence Name",
+    "category": "Category",
+    "repeatCount": "Repeat Count (0 = infinite)",
+    "autoAdvance": "Auto-advance steps",
+    "steps": "Steps",
+    "name": "Name",
+    "duration": "Duration",
+    "addStep": "Add Step",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "import": {
+    "title": "Import Sequence",
+    "import": "Import",
+    "cancel": "Cancel"
+  },
+  "share": {
+    "copied": "Link copied to clipboard!",
+    "failed": "Failed to copy link",
+    "imported": "\"{name}\" imported!"
+  },
+  "nav": {
+    "timer": "Timer",
+    "sequences": "Sequences"
   }
 }

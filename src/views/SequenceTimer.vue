@@ -2,19 +2,20 @@
   <div class="sequence-timer">
     <!-- Sequence Selection -->
     <div v-if="!store.activeSequenceId" class="sequence-list pa-4">
-      <h2 class="text-h5 mb-4">Sequences</h2>
+      <h2 class="text-h5 mb-4">{{ $t('sequences.title') }}</h2>
 
       <v-tabs v-model="activeTab" color="green-darken-2" class="mb-4">
-        <v-tab value="cooking">Cooking</v-tab>
-        <v-tab value="productivity">Productivity</v-tab>
+        <v-tab value="cooking">{{ $t('sequences.cooking') }}</v-tab>
+        <v-tab value="productivity">{{ $t('sequences.productivity') }}</v-tab>
       </v-tabs>
 
-      <v-list>
+      <v-list lines="two">
         <v-list-item
           v-for="seq in filteredSequences"
           :key="seq.id"
           @click="startSequence(seq.id)"
-          class="mb-2"
+          class="sequence-item"
+          rounded
         >
           <template v-slot:prepend>
             <v-icon :color="seq.category === 'cooking' ? 'orange-darken-2' : 'blue-darken-2'">
@@ -24,15 +25,20 @@
 
           <v-list-item-title>{{ seq.name }}</v-list-item-title>
           <v-list-item-subtitle>
-            {{ seq.steps.length }} step{{ seq.steps.length !== 1 ? 's' : '' }}
-            <span v-if="seq.repeatCount === 0"> (repeat)</span>
+            {{ seq.steps.length }} {{ seq.steps.length !== 1 ? $t('sequences.steps_plural') : $t('sequences.step') }}
+            <span v-if="seq.repeatCount === 0"> ({{ $t('sequences.repeat') }})</span>
             <span v-else-if="seq.repeatCount > 1"> (x{{ seq.repeatCount }})</span>
           </v-list-item-subtitle>
 
           <template v-slot:append>
-            <v-btn icon variant="text" size="small" @click.stop="editSequence(seq)">
-              <v-icon>mdi-pencil</v-icon>
-            </v-btn>
+            <div class="d-flex ml-4">
+              <v-btn icon variant="text" size="small" @click.stop="shareSequence(seq)">
+                <v-icon>mdi-share-variant</v-icon>
+              </v-btn>
+              <v-btn icon variant="text" size="small" @click.stop="editSequence(seq)">
+                <v-icon>mdi-pencil</v-icon>
+              </v-btn>
+            </div>
           </template>
         </v-list-item>
       </v-list>
@@ -45,7 +51,7 @@
         @click="showEditor = true"
       >
         <v-icon left>mdi-plus</v-icon>
-        Create New
+        {{ $t('sequences.createNew') }}
       </v-btn>
     </div>
 
@@ -54,15 +60,15 @@
       <!-- Waiting for confirm -->
       <div v-if="store.waitingForConfirm" class="confirm-screen text-center pa-4">
         <v-icon size="64" color="green-darken-2" class="mb-4">mdi-check-circle</v-icon>
-        <h2 class="text-h5 mb-2">Step Complete!</h2>
+        <h2 class="text-h5 mb-2">{{ $t('sequences.stepComplete') }}</h2>
         <p class="text-h6 mb-4">{{ store.currentStep?.name }}</p>
 
         <div v-if="store.nextStep" class="next-step mb-6">
-          <p class="text-subtitle-1 text-grey">Next:</p>
+          <p class="text-subtitle-1 text-grey">{{ $t('sequences.next') }}</p>
           <p class="text-h6">{{ store.nextStep.name }} - {{ formatDuration(store.nextStep.duration) }}</p>
         </div>
         <div v-else-if="hasMoreRepeats" class="next-step mb-6">
-          <p class="text-subtitle-1 text-grey">Repeat {{ store.currentRepeat + 1 }} of {{ store.activeSequence?.repeatCount || '∞' }}</p>
+          <p class="text-subtitle-1 text-grey">{{ $t('sequences.repeatOf', { current: store.currentRepeat + 1, total: store.activeSequence?.repeatCount || '∞' }) }}</p>
           <p class="text-h6">{{ store.activeSequence?.steps[0]?.name }} - {{ formatDuration(store.activeSequence?.steps[0]?.duration) }}</p>
         </div>
 
@@ -72,18 +78,18 @@
           @click="store.confirmNextStep()"
           class="mb-4"
         >
-          Start Next
+          {{ $t('sequences.startNext') }}
         </v-btn>
 
         <v-btn variant="text" @click="store.stopSequence()">
-          Stop Sequence
+          {{ $t('sequences.stopSequence') }}
         </v-btn>
       </div>
 
       <!-- Sequence complete -->
       <div v-else-if="store.isComplete" class="complete-screen text-center pa-4">
         <v-icon size="64" color="green-darken-2" class="mb-4">mdi-trophy</v-icon>
-        <h2 class="text-h5 mb-2">Sequence Complete!</h2>
+        <h2 class="text-h5 mb-2">{{ $t('sequences.sequenceComplete') }}</h2>
         <p class="text-h6 mb-6">{{ store.activeSequence?.name }}</p>
 
         <v-btn
@@ -91,11 +97,11 @@
           class="mb-2"
           @click="restartSequence"
         >
-          Start Again
+          {{ $t('sequences.startAgain') }}
         </v-btn>
         <br>
         <v-btn variant="text" @click="store.stopSequence()">
-          Choose Another
+          {{ $t('sequences.chooseAnother') }}
         </v-btn>
       </div>
 
@@ -103,9 +109,9 @@
       <div v-else class="running-step">
         <div class="step-info text-center pa-4">
           <p class="text-subtitle-1 text-grey mb-2">
-            Step {{ store.currentStepIndex + 1 }} of {{ store.totalSteps }}
+            {{ $t('sequences.stepOf', { current: store.currentStepIndex + 1, total: store.totalSteps }) }}
             <span v-if="store.activeSequence?.repeatCount !== 1">
-              (Round {{ store.currentRepeat }}<span v-if="store.activeSequence?.repeatCount > 0">/{{ store.activeSequence.repeatCount }}</span>)
+              ({{ $t('sequences.round', { current: store.currentRepeat, total: store.activeSequence?.repeatCount > 0 ? store.activeSequence.repeatCount : '∞' }) }})
             </span>
           </p>
           <h2 class="text-h4 mb-4">{{ store.currentStep?.name }}</h2>
@@ -132,7 +138,7 @@
             class="mr-2"
           >
             <v-icon>mdi-pause</v-icon>
-            Pause
+            {{ $t('sequences.pause') }}
           </v-btn>
           <v-btn
             v-else-if="store.isPaused"
@@ -142,7 +148,7 @@
             class="mr-2"
           >
             <v-icon>mdi-play</v-icon>
-            Resume
+            {{ $t('sequences.resume') }}
           </v-btn>
 
           <v-btn
@@ -153,7 +159,7 @@
             class="mr-2"
           >
             <v-icon>mdi-skip-next</v-icon>
-            Skip
+            {{ $t('sequences.skip') }}
           </v-btn>
 
           <v-btn
@@ -163,7 +169,7 @@
             @click="store.stopSequence()"
           >
             <v-icon>mdi-stop</v-icon>
-            Stop
+            {{ $t('sequences.stop') }}
           </v-btn>
         </div>
       </div>
@@ -203,12 +209,12 @@
     <v-dialog v-model="showEditor" max-width="500" persistent>
       <v-card>
         <v-card-title>
-          {{ editingSequence ? 'Edit Sequence' : 'New Sequence' }}
+          {{ editingSequence ? $t('editor.editSequence') : $t('editor.newSequence') }}
         </v-card-title>
         <v-card-text>
           <v-text-field
             v-model="editorForm.name"
-            label="Sequence Name"
+            :label="$t('editor.sequenceName')"
             variant="outlined"
             density="compact"
             class="mb-3"
@@ -216,11 +222,8 @@
 
           <v-select
             v-model="editorForm.category"
-            :items="[
-              { title: 'Cooking', value: 'cooking' },
-              { title: 'Productivity', value: 'productivity' }
-            ]"
-            label="Category"
+            :items="categoryOptions"
+            :label="$t('editor.category')"
             variant="outlined"
             density="compact"
             class="mb-3"
@@ -228,7 +231,7 @@
 
           <v-text-field
             v-model="editorForm.repeatCount"
-            label="Repeat Count (0 = infinite)"
+            :label="$t('editor.repeatCount')"
             type="number"
             min="0"
             variant="outlined"
@@ -238,13 +241,13 @@
 
           <v-switch
             v-model="editorForm.autoAdvance"
-            label="Auto-advance steps"
+            :label="$t('editor.autoAdvance')"
             color="green-darken-2"
             density="compact"
             class="mb-3"
           ></v-switch>
 
-          <h4 class="mb-2">Steps</h4>
+          <h4 class="mb-2">{{ $t('editor.steps') }}</h4>
           <div
             v-for="(step, index) in editorForm.steps"
             :key="step.id"
@@ -252,7 +255,7 @@
           >
             <v-text-field
               v-model="step.name"
-              label="Name"
+              :label="$t('editor.name')"
               variant="outlined"
               density="compact"
               hide-details
@@ -261,7 +264,7 @@
             ></v-text-field>
             <v-text-field
               v-model="step.durationInput"
-              label="Duration"
+              :label="$t('editor.duration')"
               variant="outlined"
               density="compact"
               hide-details
@@ -287,27 +290,60 @@
             color="green-darken-2"
           >
             <v-icon left>mdi-plus</v-icon>
-            Add Step
+            {{ $t('editor.addStep') }}
           </v-btn>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn variant="text" @click="closeEditor">Cancel</v-btn>
-          <v-btn color="green-darken-2" @click="saveSequence">Save</v-btn>
+          <v-btn variant="text" @click="closeEditor">{{ $t('editor.cancel') }}</v-btn>
+          <v-btn color="green-darken-2" @click="saveSequence">{{ $t('editor.save') }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Import Dialog -->
+    <v-dialog v-model="showImportDialog" max-width="400">
+      <v-card>
+        <v-card-title>{{ $t('import.title') }}</v-card-title>
+        <v-card-text v-if="importedSequence">
+          <p class="mb-2"><strong>{{ importedSequence.name }}</strong></p>
+          <p class="text-body-2 text-grey mb-2">
+            {{ importedSequence.steps.length }} {{ importedSequence.steps.length !== 1 ? $t('sequences.steps_plural') : $t('sequences.step') }}
+            <span v-if="importedSequence.repeatCount === 0"> ({{ $t('sequences.repeat') }})</span>
+            <span v-else-if="importedSequence.repeatCount > 1"> (x{{ importedSequence.repeatCount }})</span>
+          </p>
+          <v-list density="compact">
+            <v-list-item v-for="step in importedSequence.steps" :key="step.id">
+              <v-list-item-title>{{ step.name }} - {{ formatDuration(step.duration) }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="cancelImport">{{ $t('import.cancel') }}</v-btn>
+          <v-btn color="green-darken-2" @click="confirmImport">{{ $t('import.import') }}</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Snackbar -->
+    <v-snackbar v-model="showSnackbar" :timeout="2000">
+      {{ snackbarText }}
+    </v-snackbar>
   </div>
 </template>
 
 <script>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useSequencesStore, formatDuration, parseTimeInput } from '@/stores/sequences'
 import { useSettingsControls } from '@/composables/useSettingsControls'
+import { getSequenceFromCurrentUrl, clearSequenceFromUrl, copySequenceUrl } from '@/utils/sequenceUrl'
 
 export default {
   name: 'SequenceTimer',
   setup() {
+    const { t } = useI18n()
     const store = useSequencesStore()
     const {
       settings,
@@ -325,6 +361,10 @@ export default {
     const tickInterval = ref(null)
     const ringingSound = ref(null)
     const tickCounter = ref(0) // Forces reactivity for time display
+    const showImportDialog = ref(false)
+    const importedSequence = ref(null)
+    const showSnackbar = ref(false)
+    const snackbarText = ref('')
 
     const editorForm = ref({
       name: '',
@@ -363,6 +403,40 @@ export default {
       if (!seq) return false
       return seq.repeatCount === 0 || store.currentRepeat < seq.repeatCount
     })
+
+    const categoryOptions = computed(() => [
+      { title: t('sequences.cooking'), value: 'cooking' },
+      { title: t('sequences.productivity'), value: 'productivity' }
+    ])
+
+    const shareSequence = async (seq) => {
+      const success = await copySequenceUrl(seq)
+      snackbarText.value = success ? t('share.copied') : t('share.failed')
+      showSnackbar.value = true
+    }
+
+    const checkUrlForSequence = () => {
+      const seq = getSequenceFromCurrentUrl()
+      if (seq) {
+        importedSequence.value = seq
+        showImportDialog.value = true
+      }
+    }
+
+    const confirmImport = () => {
+      if (importedSequence.value) {
+        store.addSequence(importedSequence.value)
+        snackbarText.value = t('share.imported', { name: importedSequence.value.name })
+        showSnackbar.value = true
+      }
+      cancelImport()
+    }
+
+    const cancelImport = () => {
+      showImportDialog.value = false
+      importedSequence.value = null
+      clearSequenceFromUrl()
+    }
 
     const startSequence = (id) => {
       store.startSequence(id)
@@ -468,6 +542,7 @@ export default {
       store.initDefaults()
       ringingSound.value = new Audio(new URL('@/assets/timer-finish-ring.mp3', import.meta.url).href)
       tickInterval.value = setInterval(tick, 100)
+      checkUrlForSequence()
     })
 
     onBeforeUnmount(() => {
@@ -485,6 +560,7 @@ export default {
       formattedTime,
       progressPercent,
       hasMoreRepeats,
+      categoryOptions,
       formatDuration,
       startSequence,
       restartSequence,
@@ -499,7 +575,14 @@ export default {
       screenLockIcon,
       screenLockColor,
       langLabel,
-      toggleLanguage
+      toggleLanguage,
+      shareSequence,
+      showImportDialog,
+      importedSequence,
+      confirmImport,
+      cancelImport,
+      showSnackbar,
+      snackbarText
     }
   }
 }
@@ -508,6 +591,8 @@ export default {
 <style lang="scss" scoped>
 .sequence-timer {
   height: 100%;
+  width: 100%;
+  max-width: 500px;
   display: flex;
   flex-direction: column;
 }
@@ -550,5 +635,15 @@ export default {
   left: 16px;
   display: flex;
   gap: 8px;
+}
+
+.sequence-item {
+  margin-bottom: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.02);
+
+  &:active {
+    background: rgba(0, 0, 0, 0.08);
+  }
 }
 </style>

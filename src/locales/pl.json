@@ -11,5 +11,57 @@
   "languages": {
     "en": "English",
     "pl": "Polski"
+  },
+  "sequences": {
+    "title": "Sekwencje",
+    "cooking": "Gotowanie",
+    "productivity": "Produktywność",
+    "steps": "Kroki",
+    "step": "krok",
+    "steps_plural": "kroków",
+    "repeat": "powtórz",
+    "createNew": "Utwórz nową",
+    "stepComplete": "Krok ukończony!",
+    "sequenceComplete": "Sekwencja ukończona!",
+    "next": "Następny:",
+    "repeatOf": "Powtórzenie {current} z {total}",
+    "startNext": "Rozpocznij następny",
+    "stopSequence": "Zatrzymaj sekwencję",
+    "startAgain": "Zacznij od nowa",
+    "chooseAnother": "Wybierz inną",
+    "stepOf": "Krok {current} z {total}",
+    "round": "Runda {current}/{total}",
+    "pause": "Pauza",
+    "resume": "Wznów",
+    "skip": "Pomiń",
+    "stop": "Stop"
+  },
+  "editor": {
+    "newSequence": "Nowa sekwencja",
+    "editSequence": "Edytuj sekwencję",
+    "sequenceName": "Nazwa sekwencji",
+    "category": "Kategoria",
+    "repeatCount": "Liczba powtórzeń (0 = nieskończona)",
+    "autoAdvance": "Automatyczne przejście",
+    "steps": "Kroki",
+    "name": "Nazwa",
+    "duration": "Czas trwania",
+    "addStep": "Dodaj krok",
+    "cancel": "Anuluj",
+    "save": "Zapisz"
+  },
+  "import": {
+    "title": "Importuj sekwencję",
+    "import": "Importuj",
+    "cancel": "Anuluj"
+  },
+  "share": {
+    "copied": "Link skopiowany!",
+    "failed": "Nie udało się skopiować linku",
+    "imported": "\"{name}\" zaimportowano!"
+  },
+  "nav": {
+    "timer": "Timer",
+    "sequences": "Sekwencje"
   }
 }

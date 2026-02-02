@@ -12,12 +12,12 @@
     >
       <v-btn value="/" @click="$router.push('/')">
         <v-icon>mdi-timer</v-icon>
-        <span>Timer</span>
+        <span>{{ $t('nav.timer') }}</span>
       </v-btn>
 
       <v-btn value="/sequences" @click="$router.push('/sequences')">
         <v-icon>mdi-playlist-play</v-icon>
-        <span>Sequences</span>
+        <span>{{ $t('nav.sequences') }}</span>
       </v-btn>
     </v-bottom-navigation>
   </v-app>
