@@ -57,11 +57,23 @@
     </v-navigation-drawer>
 
     <v-btn
+      v-if="settings.timerRunning"
       color="red-darken-2"
-      style="position: absolute; bottom: 16px; right: 16px;"
+      :style="{ position: 'absolute', bottom: bottomOffset, right: '16px' }"
       variant="outlined"
       @click="stopTimer"
     >{{ $t('timer.stop') }}</v-btn>
+
+    <v-btn
+      v-if="!settings.timerRunning && !navOpen"
+      color="green-darken-2"
+      :style="{ position: 'absolute', bottom: bottomOffset, right: '16px' }"
+      variant="outlined"
+      icon
+      @click="navOpen = true"
+    >
+      <v-icon>mdi-menu</v-icon>
+    </v-btn>
 
     <TimerComponent :size="timerSize" />
 
@@ -69,7 +81,7 @@
       :color="muteColor"
       variant="text"
       icon
-      style="position: absolute; bottom: 16px; left: 16px;"
+      :style="{ position: 'absolute', bottom: bottomOffset, left: '16px' }"
       @click="settings.toggleMuted()"
     >
       <v-icon>{{ muteIcon }}</v-icon>
@@ -79,7 +91,7 @@
       :color="screenLockColor"
       variant="text"
       icon
-      style="position: absolute; bottom: 16px; left: 64px;"
+      :style="{ position: 'absolute', bottom: bottomOffset, left: '64px' }"
       @click="settings.toggleKeepScreenOn()"
     >
       <v-icon>{{ screenLockIcon }}</v-icon>
@@ -89,7 +101,7 @@
       :color="langColor"
       variant="text"
       icon
-      style="position: absolute; bottom: 16px; left: 112px;"
+      :style="{ position: 'absolute', bottom: bottomOffset, left: '112px' }"
       @click="toggleLanguage"
     >
       <span style="font-size: 12px; font-weight: bold;">{{ langLabel }}</span>
@@ -143,6 +155,10 @@ export default {
       return navOpen.value ? 'grey-darken-2' : 'grey-lighten-1'
     })
 
+    const bottomOffset = computed(() => {
+      return settings.timerRunning ? '16px' : '72px'
+    })
+
     const toggleLanguage = () => {
       const newLang = settings.language === 'en' ? 'pl' : 'en'
       settings.setLanguage(newLang)
@@ -170,14 +186,19 @@ export default {
     const timerStopped = () => {
       playFinishedSound()
       navOpen.value = true
+      settings.setTimerRunning(false)
+      setTimeout(setTimerSize, 0) // Recalculate after nav shows
     }
 
     const timerStarted = () => {
       navOpen.value = false
+      settings.setTimerRunning(true)
+      setTimeout(setTimerSize, 0) // Recalculate after nav hides
     }
 
     const setTimerSize = () => {
-      const height = window.innerHeight
+      const navHeight = settings.timerRunning ? 0 : 56
+      const height = window.innerHeight - navHeight
       const width = window.innerWidth
       timerSize.value = height > width ? width : height
     }
@@ -201,6 +222,7 @@ export default {
       window.removeEventListener('resize', setTimerSize)
       bus.off('clock-started', timerStarted)
       bus.off('clock-stopped', timerStopped)
+      navOpen.value = false // Close drawer when leaving
     })
 
     return {
@@ -214,6 +236,7 @@ export default {
       screenLockColor,
       langLabel,
       langColor,
+      bottomOffset,
       toggleLanguage,
       clearCustomTime,
       startCustom,

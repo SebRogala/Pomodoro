@@ -6,7 +6,8 @@ export const useSettingsStore = defineStore('settings', {
     lastUsedTime: 25,
     keepScreenOn: true,
     notificationsEnabled: false,
-    language: 'en'
+    language: 'en',
+    timerRunning: false // Not persisted
   }),
 
   actions: {
@@ -28,8 +29,14 @@ export const useSettingsStore = defineStore('settings', {
 
     setLanguage(lang) {
       this.language = lang
+    },
+
+    setTimerRunning(running) {
+      this.timerRunning = running
     }
   },
 
-  persist: true
+  persist: {
+    pick: ['muted', 'lastUsedTime', 'keepScreenOn', 'notificationsEnabled', 'language']
+  }
 })

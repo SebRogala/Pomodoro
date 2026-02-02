@@ -4,13 +4,13 @@ import Timer from '../views/Timer.vue'
 const routes = [
   {
     path: '/',
-    name: 'Home',
+    name: 'Timer',
     component: Timer
   },
   {
-    path: '/timer',
-    name: 'Timer',
-    component: () => import('../views/Timer.vue')
+    path: '/sequences',
+    name: 'Sequences',
+    component: () => import('../views/SequenceTimer.vue')
   }
 ]
 
