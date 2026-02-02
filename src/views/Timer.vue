@@ -89,7 +89,7 @@
       variant="text"
       icon
       style="position: absolute; bottom: 16px; left: 16px;"
-      @click="muted = !muted"
+      @click="settings.toggleMuted()"
     >
       <v-icon>{{ muteIcon }}</v-icon>
     </v-btn>
@@ -98,6 +98,7 @@
 
 <script>
 import { inject, ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useSettingsStore } from '@/stores/settings'
 import TimerComponent from '@/components/Timer.vue'
 
 export default {
@@ -107,16 +108,16 @@ export default {
   },
   setup() {
     const bus = inject('bus')
+    const settings = useSettingsStore()
 
     const timerSize = ref(0)
-    const customTime = ref(0)
+    const customTime = ref(settings.lastUsedTime)
     const markers = ref(0)
     const navOpen = ref(true)
-    const muted = ref(true)
     const ringingSound = ref(null)
 
     const muteIcon = computed(() => {
-      return muted.value ? 'mdi-volume-variant-off' : 'mdi-volume-high'
+      return settings.muted ? 'mdi-volume-variant-off' : 'mdi-volume-high'
     })
 
     const muteColor = computed(() => {
@@ -134,6 +135,7 @@ export default {
     }
 
     const triggerTimer = (time) => {
+      settings.setLastUsedTime(time)
       bus.emit('start-timer', time)
     }
 
@@ -161,7 +163,7 @@ export default {
     }
 
     const playFinishedSound = () => {
-      if (ringingSound.value && !muted.value) {
+      if (ringingSound.value && !settings.muted) {
         ringingSound.value.play()
       }
     }
@@ -183,11 +185,11 @@ export default {
     })
 
     return {
+      settings,
       timerSize,
       customTime,
       markers,
       navOpen,
-      muted,
       muteIcon,
       muteColor,
       clearCustomTime,
