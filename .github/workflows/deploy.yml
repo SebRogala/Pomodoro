@@ -16,8 +16,10 @@ jobs:
         run: tar -cvf deploy.tar --exclude='.git' --exclude='node_modules' --exclude='dist' .
 
       - name: Deploy to CapRover
-        uses: caprover/deploy-from-github@v1.1.2
-        with:
-          server: ${{ secrets.CAPROVER_SERVER }}
-          app: ${{ secrets.CAPROVER_APP }}
-          token: ${{ secrets.CAPROVER_TOKEN }}
+        run: |
+          curl -X POST \
+            "${{ secrets.CAPROVER_SERVER }}/api/v2/user/apps/appData/${{ secrets.CAPROVER_APP }}" \
+            -H "x-captain-app-token: ${{ secrets.CAPROVER_TOKEN }}" \
+            -H "Content-Type: multipart/form-data" \
+            -F "sourceFile=@deploy.tar" \
+            --fail
