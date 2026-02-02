@@ -9,19 +9,19 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "luxon": "^3.4.4",
+    "luxon": "^3.7.2",
     "mitt": "^3.0.1",
-    "pinia": "^2.1.7",
-    "pinia-plugin-persistedstate": "^3.2.1",
-    "vue": "^3.4.21",
-    "vue-router": "^4.3.0",
-    "vuetify": "^3.5.8"
+    "pinia": "^3.0.4",
+    "pinia-plugin-persistedstate": "^4.7.1",
+    "vue": "^3.5.27",
+    "vue-router": "^5.0.2",
+    "vuetify": "^3.11.8"
   },
   "devDependencies": {
     "@mdi/font": "^7.4.47",
-    "@vitejs/plugin-vue": "^5.0.4",
-    "sass": "^1.71.1",
-    "vite": "^6.4.1",
-    "vite-plugin-vuetify": "^2.0.1"
+    "@vitejs/plugin-vue": "^6.0.4",
+    "sass": "^1.97.3",
+    "vite": "^7.3.1",
+    "vite-plugin-vuetify": "^2.1.3"
   }
 }
