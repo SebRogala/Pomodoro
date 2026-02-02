@@ -53,25 +53,6 @@
           >30</v-btn>
         </v-list-item>
 
-        <v-divider></v-divider>
-
-        <v-list-item v-if="markers > 0">
-          <div>
-            <v-badge
-              v-for="marker in markers"
-              :key="marker"
-              color="pink"
-              dot
-              inline
-            />
-          </div>
-          <v-btn
-            @click="restartMarkers"
-            block
-            variant="outlined"
-            color="orange-accent-3"
-          >{{ $t('timer.resetMarkers') }}</v-btn>
-        </v-list-item>
       </v-list>
     </v-navigation-drawer>
 
@@ -132,7 +113,6 @@ export default {
 
     const timerSize = ref(0)
     const customTime = ref(settings.lastUsedTime)
-    const markers = ref(0)
     const navOpen = ref(true)
     const ringingSound = ref(null)
 
@@ -196,10 +176,6 @@ export default {
       navOpen.value = false
     }
 
-    const restartMarkers = () => {
-      markers.value = 0
-    }
-
     const setTimerSize = () => {
       const height = window.innerHeight
       const width = window.innerWidth
@@ -214,7 +190,6 @@ export default {
 
     onMounted(() => {
       ringingSound.value = new Audio(new URL('@/assets/timer-finish-ring.mp3', import.meta.url).href)
-      restartMarkers()
       setTimerSize()
       window.addEventListener('resize', setTimerSize)
 
@@ -232,7 +207,6 @@ export default {
       settings,
       timerSize,
       customTime,
-      markers,
       navOpen,
       muteIcon,
       muteColor,
@@ -244,8 +218,7 @@ export default {
       clearCustomTime,
       startCustom,
       triggerTimer,
-      stopTimer,
-      restartMarkers
+      stopTimer
     }
   }
 }

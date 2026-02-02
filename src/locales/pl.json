@@ -1,8 +1,7 @@
 {
   "timer": {
     "start": "Start",
-    "stop": "Stop",
-    "resetMarkers": "Wyczyść znaczniki"
+    "stop": "Stop"
   },
   "settings": {
     "sound": "Dźwięk",
