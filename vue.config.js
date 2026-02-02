@@ -1,5 +1,5 @@
 module.exports = {
-    "publicPath": "/timer",
+    "publicPath": "/",
     "transpileDependencies": [
         "vuetify"
     ],
