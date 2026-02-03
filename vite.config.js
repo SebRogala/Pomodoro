@@ -3,6 +3,9 @@ import vue from '@vitejs/plugin-vue'
 import vuetify from 'vite-plugin-vuetify'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
+import { readFileSync } from 'node:fs'
+
+const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'))
 
 export default defineConfig({
   plugins: [
@@ -46,5 +49,8 @@ export default defineConfig({
         api: 'modern'
       }
     }
+  },
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version)
   }
 })

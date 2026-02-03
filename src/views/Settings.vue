@@ -68,7 +68,7 @@
 
       <div class="about text-center text-grey">
         <p class="text-body-2 mb-1">{{ $t('settings.about') }}</p>
-        <p class="text-caption">v1.0.0</p>
+        <p class="text-caption">v{{ appVersion }}</p>
         <p class="text-caption mt-2">
           <a href="https://github.com/SebRogala/Pomodoro" target="_blank" class="text-grey">
             <v-icon size="small">mdi-github</v-icon>
@@ -87,9 +87,11 @@ export default {
   name: 'SettingsView',
   setup() {
     const settings = useSettingsStore()
+    const appVersion = __APP_VERSION__
 
     return {
-      settings
+      settings,
+      appVersion
     }
   }
 }
