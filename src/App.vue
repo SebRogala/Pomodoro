@@ -29,19 +29,49 @@
 </template>
 
 <script>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { useSettingsStore } from '@/stores/settings'
+import { useWakeLock } from '@/composables/useWakeLock'
 
 export default {
   name: 'App',
   setup() {
     const route = useRoute()
     const settings = useSettingsStore()
+    const wakeLock = useWakeLock()
     const currentRoute = ref(route.path)
 
     watch(() => route.path, (newPath) => {
       currentRoute.value = newPath
+    })
+
+    // Manage wake lock based on setting
+    const updateWakeLock = async () => {
+      if (settings.keepScreenOn && document.visibilityState === 'visible') {
+        await wakeLock.acquire()
+      } else {
+        await wakeLock.release()
+      }
+    }
+
+    // Handle visibility changes - re-acquire wake lock when page becomes visible
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && settings.keepScreenOn) {
+        wakeLock.acquire()
+      }
+    }
+
+    // Watch for setting changes
+    watch(() => settings.keepScreenOn, updateWakeLock)
+
+    onMounted(() => {
+      updateWakeLock()
+      document.addEventListener('visibilitychange', handleVisibilityChange)
+    })
+
+    onBeforeUnmount(() => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     })
 
     return {

@@ -11,8 +11,6 @@
 <script>
 import { inject, ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { DateTime, Interval } from 'luxon'
-import { useSettingsStore } from '@/stores/settings'
-import { useWakeLock } from '@/composables/useWakeLock'
 import CircularProgress from '@/components/CircularProgress.vue'
 
 export default {
@@ -28,8 +26,6 @@ export default {
   },
   setup(props) {
     const bus = inject('bus')
-    const settings = useSettingsStore()
-    const wakeLock = useWakeLock()
 
     const minutes = ref(0)
     const timerIsOn = ref(false)
@@ -54,26 +50,16 @@ export default {
       }
     }
 
-    const runClock = async () => {
+    const runClock = () => {
       timerIsOn.value = true
       endTime.value = DateTime.local().plus({ minutes: minutes.value })
       intervalId.value = setInterval(tick, 300)
-
-      // Acquire wake lock if enabled
-      if (settings.keepScreenOn) {
-        await wakeLock.acquire()
-      }
-
       bus.emit('clock-started')
     }
 
-    const stopClock = async () => {
+    const stopClock = () => {
       timerIsOn.value = false
       clearInterval(intervalId.value)
-
-      // Release wake lock
-      await wakeLock.release()
-
       bus.emit('clock-stopped')
     }
 
@@ -87,8 +73,8 @@ export default {
       stopClock()
     }
 
-    // Handle visibility change - sync timer and re-acquire wake lock
-    const handleVisibilityChange = async () => {
+    // Handle visibility change - sync timer display
+    const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && timerIsOn.value) {
         // Force re-render to sync display
         tickCounter.value++
@@ -96,12 +82,6 @@ export default {
         // Check if timer completed while in background
         if (remainingSeconds.value <= 0) {
           stopClock()
-          return
-        }
-
-        // Re-acquire wake lock if enabled
-        if (settings.keepScreenOn) {
-          await wakeLock.acquire()
         }
       }
     }

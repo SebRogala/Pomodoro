@@ -10,6 +10,11 @@ export function useWakeLock() {
       return false
     }
 
+    // Already have an active wake lock
+    if (wakeLock.value !== null) {
+      return true
+    }
+
     try {
       wakeLock.value = await navigator.wakeLock.request('screen')
 
@@ -28,13 +33,6 @@ export function useWakeLock() {
     if (wakeLock.value) {
       await wakeLock.value.release()
       wakeLock.value = null
-    }
-  }
-
-  // Re-acquire wake lock when page becomes visible again
-  const handleVisibilityChange = async () => {
-    if (document.visibilityState === 'visible' && wakeLock.value === null) {
-      // Only re-acquire if we had it before (handled by caller)
     }
   }
 
