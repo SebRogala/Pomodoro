@@ -154,48 +154,34 @@
         </div>
 
         <!-- Controls -->
-        <div class="controls text-center pa-4">
+        <div class="controls">
           <v-btn
             v-if="store.isRunning"
             color="orange-darken-2"
-            size="large"
+            variant="outlined"
             @click="store.pauseSequence()"
-            class="mr-2"
-          >
-            <v-icon>mdi-pause</v-icon>
-            {{ $t('sequences.pause') }}
-          </v-btn>
+            class="mb-2"
+          >{{ $t('sequences.pause') }}</v-btn>
           <v-btn
             v-else-if="store.isPaused"
             color="green-darken-2"
-            size="large"
+            variant="outlined"
             @click="store.resumeSequence()"
-            class="mr-2"
-          >
-            <v-icon>mdi-play</v-icon>
-            {{ $t('sequences.resume') }}
-          </v-btn>
+            class="mb-2"
+          >{{ $t('sequences.resume') }}</v-btn>
 
           <v-btn
             color="blue-darken-2"
             variant="outlined"
-            size="large"
             @click="skipStep"
-            class="mr-2"
-          >
-            <v-icon>mdi-skip-next</v-icon>
-            {{ $t('sequences.skip') }}
-          </v-btn>
+            class="mb-2"
+          >{{ $t('sequences.skip') }}</v-btn>
 
           <v-btn
             color="red-darken-2"
             variant="outlined"
-            size="large"
             @click="store.stopSequence()"
-          >
-            <v-icon>mdi-stop</v-icon>
-            {{ $t('sequences.stop') }}
-          </v-btn>
+          >{{ $t('sequences.stop') }}</v-btn>
         </div>
       </div>
     </div>
@@ -697,6 +683,15 @@ export default {
 .mute-button {
   position: absolute;
   left: 16px;
+}
+
+.controls {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
 .productivity-timer {
