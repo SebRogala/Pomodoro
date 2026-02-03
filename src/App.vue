@@ -19,6 +19,11 @@
         <v-icon>mdi-playlist-play</v-icon>
         <span>{{ $t('nav.sequences') }}</span>
       </v-btn>
+
+      <v-btn value="/settings" @click="$router.push('/settings')">
+        <v-icon>mdi-cog</v-icon>
+        <span>{{ $t('nav.settings') }}</span>
+      </v-btn>
     </v-bottom-navigation>
   </v-app>
 </template>

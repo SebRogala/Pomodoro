@@ -11,6 +11,11 @@ const routes = [
     path: '/sequences',
     name: 'Sequences',
     component: () => import('../views/SequenceTimer.vue')
+  },
+  {
+    path: '/settings',
+    name: 'Settings',
+    component: () => import('../views/Settings.vue')
   }
 ]
 

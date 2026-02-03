@@ -1,7 +1,7 @@
 <template>
-  <div class="sequence-timer">
+  <div class="page-container">
     <!-- Sequence Selection -->
-    <div v-if="!store.activeSequenceId" class="sequence-list pa-4">
+    <div v-if="!store.activeSequenceId" class="page-list pa-4">
       <h2 class="text-h5 mb-4">{{ $t('sequences.title') }}</h2>
 
       <v-tabs v-model="activeTab" color="green-darken-2" class="mb-4">
@@ -14,7 +14,7 @@
           v-for="seq in filteredSequences"
           :key="seq.id"
           @click="startSequence(seq.id)"
-          class="sequence-item"
+          class="list-item"
           rounded
         >
           <template v-slot:prepend>
@@ -178,35 +178,16 @@
       </div>
     </div>
 
-    <!-- Settings Controls -->
-    <div class="settings-controls">
-      <v-btn
-        :color="muteColor"
-        variant="text"
-        icon
-        @click="settings.toggleMuted()"
-      >
-        <v-icon>{{ muteIcon }}</v-icon>
-      </v-btn>
-
-      <v-btn
-        :color="screenLockColor"
-        variant="text"
-        icon
-        @click="settings.toggleKeepScreenOn()"
-      >
-        <v-icon>{{ screenLockIcon }}</v-icon>
-      </v-btn>
-
-      <v-btn
-        color="grey-darken-2"
-        variant="text"
-        icon
-        @click="toggleLanguage"
-      >
-        <span style="font-size: 12px; font-weight: bold;">{{ langLabel }}</span>
-      </v-btn>
-    </div>
+    <!-- Mute Button -->
+    <v-btn
+      :color="muteColor"
+      variant="text"
+      icon
+      class="mute-button"
+      @click="settings.toggleMuted()"
+    >
+      <v-icon>{{ muteIcon }}</v-icon>
+    </v-btn>
 
     <!-- Editor Dialog -->
     <v-dialog v-model="showEditor" max-width="500" persistent>
@@ -353,7 +334,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSequencesStore, formatDuration, parseTimeInput, getDisplayName } from '@/stores/sequences'
-import { useSettingsControls } from '@/composables/useSettingsControls'
+import { useSettingsStore } from '@/stores/settings'
 import { getSequenceFromCurrentUrl, clearSequenceFromUrl, copySequenceUrl } from '@/utils/sequenceUrl'
 
 export default {
@@ -361,15 +342,10 @@ export default {
   setup() {
     const { t, locale } = useI18n()
     const store = useSequencesStore()
-    const {
-      settings,
-      muteIcon,
-      muteColor,
-      screenLockIcon,
-      screenLockColor,
-      langLabel,
-      toggleLanguage
-    } = useSettingsControls()
+    const settings = useSettingsStore()
+
+    const muteIcon = computed(() => settings.muted ? 'mdi-volume-variant-off' : 'mdi-volume-high')
+    const muteColor = computed(() => settings.muted ? 'grey' : 'green-darken-2')
 
     const activeTab = ref('cooking')
     const showEditor = ref(false)
@@ -616,10 +592,6 @@ export default {
       saveSequence,
       muteIcon,
       muteColor,
-      screenLockIcon,
-      screenLockColor,
-      langLabel,
-      toggleLanguage,
       shareSequence,
       showImportDialog,
       importedSequence,
@@ -638,18 +610,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.sequence-timer {
-  height: 100%;
-  width: 100%;
-  max-width: 500px;
-  display: flex;
-  flex-direction: column;
-}
-
-.sequence-list {
-  flex: 1;
-  overflow-y: auto;
-}
+@import '@/assets/styles/shared.scss';
 
 .active-sequence {
   flex: 1;
@@ -678,21 +639,9 @@ export default {
   justify-content: center;
 }
 
-.settings-controls {
+.mute-button {
   position: absolute;
   bottom: 72px;
   left: 16px;
-  display: flex;
-  gap: 8px;
-}
-
-.sequence-item {
-  margin-bottom: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background: rgba(0, 0, 0, 0.02);
-
-  &:active {
-    background: rgba(0, 0, 0, 0.08);
-  }
 }
 </style>

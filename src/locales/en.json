@@ -4,9 +4,11 @@
     "stop": "Stop"
   },
   "settings": {
+    "title": "Settings",
     "sound": "Sound",
     "keepScreenOn": "Keep screen on",
-    "language": "Language"
+    "language": "Language",
+    "about": "Pomodoro Timer"
   },
   "languages": {
     "en": "English",
@@ -83,6 +85,7 @@
   },
   "nav": {
     "timer": "Timer",
-    "sequences": "Sequences"
+    "sequences": "Sequences",
+    "settings": "Settings"
   }
 }

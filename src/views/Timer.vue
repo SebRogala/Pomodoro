@@ -86,26 +86,6 @@
     >
       <v-icon>{{ muteIcon }}</v-icon>
     </v-btn>
-
-    <v-btn
-      :color="screenLockColor"
-      variant="text"
-      icon
-      :style="{ position: 'absolute', bottom: bottomOffset, left: '64px' }"
-      @click="settings.toggleKeepScreenOn()"
-    >
-      <v-icon>{{ screenLockIcon }}</v-icon>
-    </v-btn>
-
-    <v-btn
-      :color="langColor"
-      variant="text"
-      icon
-      :style="{ position: 'absolute', bottom: bottomOffset, left: '112px' }"
-      @click="toggleLanguage"
-    >
-      <span style="font-size: 12px; font-weight: bold;">{{ langLabel }}</span>
-    </v-btn>
   </div>
 </template>
 
@@ -136,33 +116,9 @@ export default {
       return navOpen.value ? 'grey-darken-2' : 'grey-lighten-1'
     })
 
-    const screenLockIcon = computed(() => {
-      return settings.keepScreenOn ? 'mdi-cellphone' : 'mdi-cellphone-off'
-    })
-
-    const screenLockColor = computed(() => {
-      if (settings.keepScreenOn) {
-        return 'green-darken-2'
-      }
-      return navOpen.value ? 'grey-darken-2' : 'grey-lighten-1'
-    })
-
-    const langLabel = computed(() => {
-      return settings.language.toUpperCase()
-    })
-
-    const langColor = computed(() => {
-      return navOpen.value ? 'grey-darken-2' : 'grey-lighten-1'
-    })
-
     const bottomOffset = computed(() => {
       return settings.timerRunning ? '16px' : '72px'
     })
-
-    const toggleLanguage = () => {
-      const newLang = settings.language === 'en' ? 'pl' : 'en'
-      settings.setLanguage(newLang)
-    }
 
     const clearCustomTime = () => {
       if (isNaN(customTime.value) || !customTime.value) {
@@ -232,12 +188,7 @@ export default {
       navOpen,
       muteIcon,
       muteColor,
-      screenLockIcon,
-      screenLockColor,
-      langLabel,
-      langColor,
       bottomOffset,
-      toggleLanguage,
       clearCustomTime,
       startCustom,
       triggerTimer,

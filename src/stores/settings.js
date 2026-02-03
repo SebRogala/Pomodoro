@@ -1,12 +1,18 @@
 import { defineStore } from 'pinia'
 
+// Detect browser language, default to 'en' if not Polish
+function getDefaultLanguage() {
+  const browserLang = navigator.language || navigator.userLanguage || 'en'
+  return browserLang.startsWith('pl') ? 'pl' : 'en'
+}
+
 export const useSettingsStore = defineStore('settings', {
   state: () => ({
     muted: false,
     lastUsedTime: 25,
     keepScreenOn: true,
     notificationsEnabled: false,
-    language: 'en',
+    language: getDefaultLanguage(),
     timerRunning: false // Not persisted
   }),
 
