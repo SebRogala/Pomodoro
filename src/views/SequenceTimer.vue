@@ -160,27 +160,28 @@
             color="orange-darken-2"
             variant="outlined"
             @click="store.pauseSequence()"
-            class="mb-2"
+            class="ml-2"
           >{{ $t('sequences.pause') }}</v-btn>
           <v-btn
             v-else-if="store.isPaused"
             color="green-darken-2"
             variant="outlined"
             @click="store.resumeSequence()"
-            class="mb-2"
+            class="ml-2"
           >{{ $t('sequences.resume') }}</v-btn>
 
           <v-btn
             color="blue-darken-2"
             variant="outlined"
             @click="skipStep"
-            class="mb-2"
+            class="ml-2"
           >{{ $t('sequences.skip') }}</v-btn>
 
           <v-btn
             color="red-darken-2"
             variant="outlined"
             @click="store.stopSequence()"
+            class="ml-2"
           >{{ $t('sequences.stop') }}</v-btn>
         </div>
       </div>
@@ -690,8 +691,8 @@ export default {
   bottom: 16px;
   right: 16px;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  flex-direction: row;
+  align-items: center;
 }
 
 .productivity-timer {
