@@ -1,7 +1,10 @@
 <template>
   <div class="timer-wrapper">
-    <canvas ref="canvasRef" :width="size" :height="size"></canvas>
-    <img class="timer__background" :width="size" :src="timerBackground">
+    <CircularProgress
+      :size="Number(size)"
+      :remaining-seconds="remainingSeconds"
+      :total-seconds="totalSeconds"
+    />
   </div>
 </template>
 
@@ -10,10 +13,13 @@ import { inject, ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { DateTime, Interval } from 'luxon'
 import { useSettingsStore } from '@/stores/settings'
 import { useWakeLock } from '@/composables/useWakeLock'
-import timerBackgroundImg from '@/assets/timer-background-960.png'
+import CircularProgress from '@/components/CircularProgress.vue'
 
 export default {
   name: 'TimerComponent',
+  components: {
+    CircularProgress
+  },
   props: {
     size: {
       type: [Number, String],
@@ -27,59 +33,31 @@ export default {
 
     const minutes = ref(0)
     const timerIsOn = ref(false)
-    const canvasRef = ref(null)
-    const ctx = ref(null)
     const endTime = ref(null)
     const intervalId = ref(0)
-    const constantsColor = '#000000'
-    const strokeColor = '#950703'
+    const tickCounter = ref(0)
 
-    const timerBackground = timerBackgroundImg
-
-    const lineWidth = computed(() => {
-      return (props.size / 2) - props.size * 0.115
+    const remainingSeconds = computed(() => {
+      const _ = tickCounter.value // Force reactivity
+      if (!endTime.value) return 0
+      const interval = Interval.fromDateTimes(DateTime.local(), endTime.value)
+      const secs = interval.length('seconds')
+      return isNaN(secs) ? 0 : Math.max(0, secs)
     })
 
-    const degToRad = (degree) => {
-      const factor = Math.PI / 180
-      return degree * factor
-    }
+    const totalSeconds = computed(() => minutes.value * 60)
 
-    const renderConstants = () => {
-      ctx.value.strokeStyle = constantsColor
-      ctx.value.lineWidth = 10
-      ctx.value.beginPath()
-      ctx.value.arc(props.size / 2, props.size / 2, 5, degToRad(0), degToRad(360))
-      ctx.value.stroke()
-    }
-
-    const renderTime = () => {
-      const interval = Interval.fromDateTimes(DateTime.local(), endTime.value)
-      const mils = interval.length('milliseconds')
-
-      if (isNaN(mils)) {
+    const tick = () => {
+      tickCounter.value++
+      if (timerIsOn.value && remainingSeconds.value <= 0) {
         stopClock()
-        return
       }
-
-      const min = interval.length('minutes')
-
-      ctx.value.fillStyle = 'white'
-      ctx.value.fillRect(0, 0, props.size, props.size)
-
-      ctx.value.lineWidth = lineWidth.value
-      ctx.value.strokeStyle = strokeColor
-      ctx.value.beginPath()
-      ctx.value.arc(props.size / 2, props.size / 2, lineWidth.value / 2, degToRad(-(min * 6) - 90), degToRad(-90))
-      ctx.value.stroke()
-
-      renderConstants()
     }
 
     const runClock = async () => {
       timerIsOn.value = true
       endTime.value = DateTime.local().plus({ minutes: minutes.value })
-      intervalId.value = setInterval(renderTime, 300)
+      intervalId.value = setInterval(tick, 300)
 
       // Acquire wake lock if enabled
       if (settings.keepScreenOn) {
@@ -106,31 +84,32 @@ export default {
 
     const onStopTimer = () => {
       endTime.value = DateTime.local()
-      renderTime()
       stopClock()
     }
 
     // Handle visibility change - sync timer and re-acquire wake lock
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible' && timerIsOn.value) {
-        // Force re-render to sync display with actual time
-        renderTime()
+        // Force re-render to sync display
+        tickCounter.value++
 
-        // Re-acquire wake lock if enabled (if timer still running after renderTime)
-        if (timerIsOn.value && settings.keepScreenOn) {
+        // Check if timer completed while in background
+        if (remainingSeconds.value <= 0) {
+          stopClock()
+          return
+        }
+
+        // Re-acquire wake lock if enabled
+        if (settings.keepScreenOn) {
           await wakeLock.acquire()
         }
       }
     }
 
     onMounted(() => {
-      ctx.value = canvasRef.value.getContext('2d')
       endTime.value = DateTime.local()
-      renderTime()
-
       bus.on('start-timer', onStartTimer)
       bus.on('stop-timer', onStopTimer)
-
       document.addEventListener('visibilitychange', handleVisibilityChange)
     })
 
@@ -142,8 +121,8 @@ export default {
     })
 
     return {
-      canvasRef,
-      timerBackground
+      remainingSeconds,
+      totalSeconds
     }
   }
 }
@@ -154,13 +133,5 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-canvas {
-  display: block;
-}
-
-.timer__background {
-  position: absolute;
 }
 </style>

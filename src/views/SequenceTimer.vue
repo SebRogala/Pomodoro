@@ -110,7 +110,29 @@
 
       <!-- Running step -->
       <div v-else class="running-step">
-        <div class="step-info text-center pa-4">
+        <!-- Productivity: Circular timer -->
+        <div v-if="isProductivity" class="productivity-timer">
+          <div class="circular-timer-container">
+            <CircularProgress
+              :size="circularSize"
+              :remaining-seconds="remainingSeconds"
+              :total-seconds="store.currentStep?.duration || 0"
+            />
+          </div>
+          <!-- Show step info only when paused -->
+          <div v-if="store.isPaused" class="step-info text-center pa-2">
+            <h2 class="text-h5 mb-1">{{ getName(store.currentStep) }}</h2>
+            <p class="text-caption text-grey">
+              {{ $t('sequences.stepOf', { current: store.currentStepIndex + 1, total: store.totalSteps }) }}
+              <span v-if="store.activeSequence?.repeatCount !== 1">
+                · {{ $t('sequences.round', { current: store.currentRepeat, total: store.activeSequence?.repeatCount > 0 ? store.activeSequence.repeatCount : '∞' }) }}
+              </span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Cooking: Linear progress -->
+        <div v-else class="step-info text-center pa-4">
           <p class="text-subtitle-1 text-grey mb-2">
             {{ $t('sequences.stepOf', { current: store.currentStepIndex + 1, total: store.totalSteps }) }}
             <span v-if="store.activeSequence?.repeatCount !== 1">
@@ -121,8 +143,8 @@
           <p class="time-display text-h1 font-weight-bold">{{ formattedTime }}</p>
         </div>
 
-        <!-- Progress bar -->
-        <div class="progress-container pa-4">
+        <!-- Progress bar (cooking only) -->
+        <div v-if="!isProductivity" class="progress-container pa-4">
           <v-progress-linear
             :model-value="progressPercent"
             color="green-darken-2"
@@ -184,6 +206,7 @@
       variant="text"
       icon
       class="mute-button"
+      :style="{ bottom: isSequenceActive ? '16px' : '72px' }"
       @click="settings.toggleMuted()"
     >
       <v-icon>{{ muteIcon }}</v-icon>
@@ -331,14 +354,19 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSequencesStore, formatDuration, parseTimeInput, getDisplayName } from '@/stores/sequences'
 import { useSettingsStore } from '@/stores/settings'
 import { getSequenceFromCurrentUrl, clearSequenceFromUrl, copySequenceUrl } from '@/utils/sequenceUrl'
+import { useTimerSize } from '@/composables/useTimerSize'
+import CircularProgress from '@/components/CircularProgress.vue'
 
 export default {
   name: 'SequenceTimer',
+  components: {
+    CircularProgress
+  },
   setup() {
     const { t, locale } = useI18n()
     const store = useSequencesStore()
@@ -399,6 +427,18 @@ export default {
       if (!seq) return false
       return seq.repeatCount === 0 || store.currentRepeat < seq.repeatCount
     })
+
+    const isProductivity = computed(() => {
+      return store.activeSequence?.category === 'productivity'
+    })
+
+    const remainingSeconds = computed(() => {
+      const _ = tickCounter.value
+      return Math.ceil(store.getRemainingTime() / 1000)
+    })
+
+    // Extra height for controls below the timer
+    const { timerSize: circularSize, calculateSize } = useTimerSize(80)
 
     const categoryOptions = computed(() => [
       { title: t('sequences.cooking'), value: 'cooking' },
@@ -557,6 +597,16 @@ export default {
       }
     }
 
+    // Update timerRunning state to hide bottom nav during active sequence
+    const isSequenceActive = computed(() => {
+      return store.activeSequenceId && (store.isRunning || store.isPaused)
+    })
+
+    watch(isSequenceActive, (active) => {
+      calculateSize(active)
+      settings.setTimerRunning(active)
+    }, { immediate: true })
+
     onMounted(() => {
       store.initDefaults()
       ringingSound.value = new Audio(new URL('@/assets/timer-finish-ring.mp3', import.meta.url).href)
@@ -566,6 +616,7 @@ export default {
 
     onBeforeUnmount(() => {
       clearInterval(tickInterval.value)
+      settings.setTimerRunning(false) // Reset when leaving
     })
 
     return {
@@ -579,6 +630,10 @@ export default {
       formattedTime,
       progressPercent,
       hasMoreRepeats,
+      isProductivity,
+      isSequenceActive,
+      remainingSeconds,
+      circularSize,
       categoryOptions,
       formatDuration,
       getName,
@@ -641,7 +696,20 @@ export default {
 
 .mute-button {
   position: absolute;
-  bottom: 72px;
   left: 16px;
+}
+
+.productivity-timer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.circular-timer-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

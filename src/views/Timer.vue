@@ -92,6 +92,7 @@
 <script>
 import { inject, ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useSettingsStore } from '@/stores/settings'
+import { useTimerSize } from '@/composables/useTimerSize'
 import TimerComponent from '@/components/Timer.vue'
 
 export default {
@@ -102,8 +103,8 @@ export default {
   setup() {
     const bus = inject('bus')
     const settings = useSettingsStore()
+    const { timerSize, calculateSize } = useTimerSize()
 
-    const timerSize = ref(0)
     const customTime = ref(settings.lastUsedTime)
     const navOpen = ref(true)
     const ringingSound = ref(null)
@@ -141,22 +142,17 @@ export default {
 
     const timerStopped = () => {
       playFinishedSound()
+      // Set stopped size BEFORE changing state to avoid blink
+      calculateSize(false)
       navOpen.value = true
       settings.setTimerRunning(false)
-      setTimeout(setTimerSize, 0) // Recalculate after nav shows
     }
 
     const timerStarted = () => {
+      // Set running size BEFORE changing state to avoid blink
+      calculateSize(true)
       navOpen.value = false
       settings.setTimerRunning(true)
-      setTimeout(setTimerSize, 0) // Recalculate after nav hides
-    }
-
-    const setTimerSize = () => {
-      const navHeight = settings.timerRunning ? 0 : 56
-      const height = window.innerHeight - navHeight
-      const width = window.innerWidth
-      timerSize.value = height > width ? width : height
     }
 
     const playFinishedSound = () => {
@@ -167,15 +163,11 @@ export default {
 
     onMounted(() => {
       ringingSound.value = new Audio(new URL('@/assets/timer-finish-ring.mp3', import.meta.url).href)
-      setTimerSize()
-      window.addEventListener('resize', setTimerSize)
-
       bus.on('clock-started', timerStarted)
       bus.on('clock-stopped', timerStopped)
     })
 
     onBeforeUnmount(() => {
-      window.removeEventListener('resize', setTimerSize)
       bus.off('clock-started', timerStarted)
       bus.off('clock-stopped', timerStopped)
       navOpen.value = false // Close drawer when leaving
