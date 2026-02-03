@@ -96,7 +96,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '@/assets/styles/shared.scss';
+@use '@/assets/styles/shared.scss' as *;
 
 .about a {
   text-decoration: none;

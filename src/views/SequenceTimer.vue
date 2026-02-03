@@ -665,7 +665,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '@/assets/styles/shared.scss';
+@use '@/assets/styles/shared.scss' as *;
 
 .active-sequence {
   flex: 1;
