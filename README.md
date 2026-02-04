@@ -6,10 +6,11 @@ A versatile timer app for cooking and productivity, built with Vue 3 + Vuetify 3
 
 ## Features
 
-- **Circular Timer** - Visual time representation like a clock face
+- **Circular Timer** - Visual countdown with clock-face style display
 - **Sequence Timer** - Multi-step timers for cooking and productivity
-  - Cooking: linear progress bar
+  - Cooking: linear progress bar visualization
   - Productivity: circular clock timer
+- **Background Timer** - Continues running when browser is minimized
 - **URL Sharing** - Share sequences via link
 - **Multi-language** - English and Polish
 - **Keep Screen On** - Wake lock to prevent screen timeout
@@ -40,13 +41,13 @@ npm run dev
 npm run build
 ```
 
-## Docker
+## Deployment
+
+Auto-deploys to CapRover on push to master branch via GitHub webhook.
 
 ```bash
-# Build image
+# Local Docker build (optional)
 docker build -t pomodoro .
-
-# Run container
 docker run -d -p 8080:80 pomodoro
 ```
 
