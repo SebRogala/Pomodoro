@@ -344,9 +344,10 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSequencesStore, formatDuration, parseTimeInput, getDisplayName } from '@/stores/sequences'
-import { useSettingsStore } from '@/stores/settings'
 import { getSequenceFromCurrentUrl, clearSequenceFromUrl, copySequenceUrl } from '@/utils/sequenceUrl'
 import { useTimerSize } from '@/composables/useTimerSize'
+import { useSettingsControls } from '@/composables/useSettingsControls'
+import { useAudio } from '@/composables/useAudio'
 import CircularProgress from '@/components/CircularProgress.vue'
 
 export default {
@@ -357,16 +358,15 @@ export default {
   setup() {
     const { t, locale } = useI18n()
     const store = useSequencesStore()
-    const settings = useSettingsStore()
-
-    const muteIcon = computed(() => settings.muted ? 'mdi-volume-variant-off' : 'mdi-volume-high')
-    const muteColor = computed(() => settings.muted ? 'grey' : 'green-darken-2')
+    const { settings, muteIcon, muteColor } = useSettingsControls()
+    const { initAudio, play: playSound } = useAudio(
+      new URL('@/assets/timer-finish-ring.mp3', import.meta.url).href
+    )
 
     const activeTab = ref('cooking')
     const showEditor = ref(false)
     const editingSequence = ref(null)
     const tickInterval = ref(null)
-    const ringingSound = ref(null)
     const tickCounter = ref(0) // Forces reactivity for time display
     const showImportDialog = ref(false)
     const importedSequence = ref(null)
@@ -436,8 +436,15 @@ export default {
     const getName = (item) => getDisplayName(item, t)
 
     const shareSequence = async (seq) => {
-      const success = await copySequenceUrl(seq)
-      snackbarText.value = success ? t('share.copied') : t('share.failed')
+      const result = await copySequenceUrl(seq)
+      if (result.success) {
+        snackbarText.value = t('share.copied')
+      } else if (result.url) {
+        // Clipboard unavailable, show URL in snackbar
+        snackbarText.value = t('share.failed')
+      } else {
+        snackbarText.value = t('share.failed')
+      }
       showSnackbar.value = true
     }
 
@@ -567,13 +574,6 @@ export default {
       closeEditor()
     }
 
-    const playSound = () => {
-      if (ringingSound.value && !settings.muted) {
-        ringingSound.value.currentTime = 0
-        ringingSound.value.play()
-      }
-    }
-
     const tick = () => {
       tickCounter.value++ // Force reactive updates
       if (store.isRunning) {
@@ -596,8 +596,8 @@ export default {
 
     onMounted(() => {
       store.initDefaults()
-      ringingSound.value = new Audio(new URL('@/assets/timer-finish-ring.mp3', import.meta.url).href)
-      tickInterval.value = setInterval(tick, 100)
+      initAudio()
+      tickInterval.value = setInterval(tick, 250) // 250ms for better battery performance
       checkUrlForSequence()
     })
 

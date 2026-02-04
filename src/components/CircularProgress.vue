@@ -6,7 +6,7 @@
 </template>
 
 <script>
-import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, watch, onMounted, nextTick } from 'vue'
 import timerBackgroundImg from '@/assets/timer-background-960.png'
 
 export default {
@@ -71,24 +71,16 @@ export default {
       ctx.value.stroke()
     }
 
-    const intervalId = ref(null)
-
     onMounted(async () => {
       await nextTick()
       ctx.value = canvasRef.value.getContext('2d')
       render()
-      // Continuous render loop like old Timer
-      intervalId.value = setInterval(render, 300)
     })
 
-    onBeforeUnmount(() => {
-      if (intervalId.value) {
-        clearInterval(intervalId.value)
-      }
-    })
-
-    // Still watch size changes for immediate response
+    // Rely on Vue reactivity - watch props changes instead of polling
     watch(() => props.size, render)
+    watch(() => props.remainingSeconds, render)
+    watch(() => props.totalSeconds, render)
 
     return {
       canvasRef,

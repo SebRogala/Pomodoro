@@ -1,5 +1,20 @@
 import { formatDuration, parseTimeInput } from '@/stores/sequences'
 
+// Maximum allowed length for names to prevent abuse
+const MAX_NAME_LENGTH = 100
+
+/**
+ * Sanitize a string to prevent XSS and limit length
+ * Removes HTML tags and limits to safe length
+ */
+function sanitizeString(str) {
+  if (!str || typeof str !== 'string') return ''
+  // Remove any HTML tags and trim
+  const cleaned = str.replace(/<[^>]*>/g, '').trim()
+  // Limit length
+  return cleaned.slice(0, MAX_NAME_LENGTH)
+}
+
 /**
  * Encode a sequence to a shareable URL hash
  * Format: #seq=Step1:1m,Step2:90s&name=MySequence&repeat=1&auto=0
@@ -45,7 +60,8 @@ export function decodeSequenceUrl(hash) {
       const lastColonIndex = stepStr.lastIndexOf(':')
       if (lastColonIndex === -1) return null
 
-      const name = decodeURIComponent(stepStr.slice(0, lastColonIndex))
+      const rawName = decodeURIComponent(stepStr.slice(0, lastColonIndex))
+      const name = sanitizeString(rawName)
       const durationStr = stepStr.slice(lastColonIndex + 1)
       const duration = parseTimeInput(durationStr)
 
@@ -60,10 +76,13 @@ export function decodeSequenceUrl(hash) {
 
     if (steps.length === 0) return null
 
-    const name = params.get('name') || 'Imported Sequence'
+    const rawName = params.get('name') || 'Imported Sequence'
+    const name = sanitizeString(rawName)
     const repeatCount = parseInt(params.get('repeat')) || 1
     const autoAdvance = params.get('auto') === '1'
-    const category = params.get('cat') || 'custom'
+    const rawCategory = params.get('cat') || 'custom'
+    // Validate category to prevent injection
+    const category = ['cooking', 'productivity', 'custom'].includes(rawCategory) ? rawCategory : 'custom'
 
     return {
       name,
@@ -94,14 +113,23 @@ export function clearSequenceFromUrl() {
 
 /**
  * Copy sequence URL to clipboard
+ * Returns { success: boolean, url?: string }
+ * If clipboard unavailable, returns the URL so it can be displayed to user
  */
 export async function copySequenceUrl(sequence) {
   const url = encodeSequenceUrl(sequence)
+
+  // Check if clipboard API is available (requires secure context)
+  if (!navigator.clipboard || !navigator.clipboard.writeText) {
+    console.warn('Clipboard API not available (requires HTTPS)')
+    return { success: false, url }
+  }
+
   try {
     await navigator.clipboard.writeText(url)
-    return true
+    return { success: true }
   } catch (e) {
     console.warn('Failed to copy to clipboard:', e)
-    return false
+    return { success: false, url }
   }
 }

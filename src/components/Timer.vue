@@ -9,7 +9,7 @@
 </template>
 
 <script>
-import { inject, ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { inject, ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { DateTime, Interval } from 'luxon'
 import CircularProgress from '@/components/CircularProgress.vue'
 
@@ -51,6 +51,10 @@ export default {
     }
 
     const runClock = () => {
+      // Clear any existing interval to prevent multiple intervals
+      if (intervalId.value) {
+        clearInterval(intervalId.value)
+      }
       timerIsOn.value = true
       endTime.value = DateTime.local().plus({ minutes: minutes.value })
       intervalId.value = setInterval(tick, 300)
@@ -74,10 +78,13 @@ export default {
     }
 
     // Handle visibility change - sync timer display
-    const handleVisibilityChange = () => {
+    const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible' && timerIsOn.value) {
         // Force re-render to sync display
         tickCounter.value++
+
+        // Wait for computed to update before checking
+        await nextTick()
 
         // Check if timer completed while in background
         if (remainingSeconds.value <= 0) {

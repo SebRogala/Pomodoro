@@ -91,8 +91,9 @@
 
 <script>
 import { inject, ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useSettingsStore } from '@/stores/settings'
 import { useTimerSize } from '@/composables/useTimerSize'
+import { useSettingsControls } from '@/composables/useSettingsControls'
+import { useAudio } from '@/composables/useAudio'
 import TimerComponent from '@/components/Timer.vue'
 
 export default {
@@ -102,20 +103,14 @@ export default {
   },
   setup() {
     const bus = inject('bus')
-    const settings = useSettingsStore()
+    const { settings, muteIcon, muteColor } = useSettingsControls()
     const { timerSize, calculateSize } = useTimerSize()
+    const { initAudio, play: playFinishedSound } = useAudio(
+      new URL('@/assets/timer-finish-ring.mp3', import.meta.url).href
+    )
 
     const customTime = ref(settings.lastUsedTime)
     const navOpen = ref(true)
-    const ringingSound = ref(null)
-
-    const muteIcon = computed(() => {
-      return settings.muted ? 'mdi-volume-variant-off' : 'mdi-volume-high'
-    })
-
-    const muteColor = computed(() => {
-      return navOpen.value ? 'grey-darken-2' : 'grey-lighten-1'
-    })
 
     const bottomOffset = computed(() => {
       return settings.timerRunning ? '16px' : '72px'
@@ -155,14 +150,8 @@ export default {
       settings.setTimerRunning(true)
     }
 
-    const playFinishedSound = () => {
-      if (ringingSound.value && !settings.muted) {
-        ringingSound.value.play()
-      }
-    }
-
     onMounted(() => {
-      ringingSound.value = new Audio(new URL('@/assets/timer-finish-ring.mp3', import.meta.url).href)
+      initAudio()
       bus.on('clock-started', timerStarted)
       bus.on('clock-stopped', timerStopped)
     })
