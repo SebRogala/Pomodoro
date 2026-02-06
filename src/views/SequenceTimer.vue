@@ -66,6 +66,11 @@
         <h2 class="text-h5 mb-2">{{ $t('sequences.stepComplete') }}</h2>
         <p class="text-h6 mb-4">{{ getName(store.currentStep) }}</p>
 
+        <div class="overtime-display mb-6">
+          <p class="text-caption text-grey mb-1">{{ $t('sequences.overtime') }}</p>
+          <p class="overtime-time">+{{ formattedOvertime }}</p>
+        </div>
+
         <div v-if="store.nextStep" class="next-step mb-6">
           <p class="text-subtitle-1 text-grey">{{ $t('sequences.next') }}</p>
           <p class="text-h6">{{ getName(store.nextStep) }} - {{ formatDuration(store.nextStep.duration) }}</p>
@@ -399,6 +404,15 @@ export default {
       return `${mins}:${secs.toString().padStart(2, '0')}`
     })
 
+    const formattedOvertime = computed(() => {
+      const _ = tickCounter.value
+      const ms = store.getOvertimeElapsed()
+      const totalSecs = Math.floor(ms / 1000)
+      const mins = Math.floor(totalSecs / 60)
+      const secs = totalSecs % 60
+      return `${mins}:${secs.toString().padStart(2, '0')}`
+    })
+
     const progressPercent = computed(() => {
       // tickCounter dependency forces re-computation
       const _ = tickCounter.value
@@ -615,6 +629,7 @@ export default {
       editorForm,
       filteredSequences,
       formattedTime,
+      formattedOvertime,
       progressPercent,
       hasMoreRepeats,
       isProductivity,
@@ -663,6 +678,14 @@ export default {
 
 .time-display {
   font-variant-numeric: tabular-nums;
+}
+
+.overtime-time {
+  font-size: 3rem;
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+  color: #E65100;
+  line-height: 1;
 }
 
 .confirm-screen,

@@ -16,7 +16,8 @@ export const useSequencesStore = defineStore('sequences', {
     isRunning: false,
     isPaused: false,
     pausedTimeRemaining: null,
-    waitingForConfirm: false
+    waitingForConfirm: false,
+    stepCompletedAt: null
   }),
 
   getters: {
@@ -61,6 +62,11 @@ export const useSequencesStore = defineStore('sequences', {
       }
       if (!this.isRunning || !this.stepEndTime) return 0
       return Math.max(0, this.stepEndTime - Date.now())
+    },
+
+    getOvertimeElapsed() {
+      if (!this.stepCompletedAt) return 0
+      return Math.max(0, Date.now() - this.stepCompletedAt)
     },
 
     // Sequence CRUD
@@ -125,6 +131,7 @@ export const useSequencesStore = defineStore('sequences', {
       this.stepEndTime = Date.now() + (step.duration * 1000)
       this.isRunning = true
       this.waitingForConfirm = false
+      this.stepCompletedAt = null
     },
 
     pauseSequence() {
@@ -151,11 +158,13 @@ export const useSequencesStore = defineStore('sequences', {
       this.isPaused = false
       this.pausedTimeRemaining = null
       this.waitingForConfirm = false
+      this.stepCompletedAt = null
     },
 
     completeCurrentStep() {
       this.isRunning = false
       this.stepEndTime = null
+      this.stepCompletedAt = Date.now()
 
       const seq = this.activeSequence
       if (!seq) return
