@@ -123,10 +123,10 @@
           <!-- Show step info only when paused -->
           <div v-if="store.isPaused" class="step-info text-center pa-2">
             <h2 v-if="getName(store.currentStep)" class="text-h5 mb-1">{{ getName(store.currentStep) }}</h2>
-            <p class="text-caption text-grey">
-              {{ $t('sequences.stepOf', { current: store.currentStepIndex + 1, total: store.totalSteps }) }}
+            <p v-if="store.totalSteps > 1 || store.activeSequence?.repeatCount !== 1" class="text-caption text-grey">
+              <span v-if="store.totalSteps > 1">{{ $t('sequences.stepOf', { current: store.currentStepIndex + 1, total: store.totalSteps }) }}</span>
               <span v-if="store.activeSequence?.repeatCount !== 1">
-                · {{ $t('sequences.round', { current: store.currentRepeat, total: store.activeSequence?.repeatCount > 0 ? store.activeSequence.repeatCount : '∞' }) }}
+                {{ store.totalSteps > 1 ? '· ' : '' }}{{ $t('sequences.round', { current: store.currentRepeat, total: store.activeSequence?.repeatCount > 0 ? store.activeSequence.repeatCount : '∞' }) }}
               </span>
             </p>
           </div>
@@ -134,10 +134,10 @@
 
         <!-- Cooking: Linear progress -->
         <div v-else class="step-info text-center pa-4">
-          <p class="text-subtitle-1 text-grey mb-2">
-            {{ $t('sequences.stepOf', { current: store.currentStepIndex + 1, total: store.totalSteps }) }}
+          <p v-if="store.totalSteps > 1 || store.activeSequence?.repeatCount !== 1" class="text-subtitle-1 text-grey mb-2">
+            <span v-if="store.totalSteps > 1">{{ $t('sequences.stepOf', { current: store.currentStepIndex + 1, total: store.totalSteps }) }}</span>
             <span v-if="store.activeSequence?.repeatCount !== 1">
-              ({{ $t('sequences.round', { current: store.currentRepeat, total: store.activeSequence?.repeatCount > 0 ? store.activeSequence.repeatCount : '∞' }) }})
+              {{ store.totalSteps > 1 ? ' (' : '' }}{{ $t('sequences.round', { current: store.currentRepeat, total: store.activeSequence?.repeatCount > 0 ? store.activeSequence.repeatCount : '∞' }) }}{{ store.totalSteps > 1 ? ')' : '' }}
             </span>
           </p>
           <h2 v-if="getName(store.currentStep)" class="text-h4 mb-4">{{ getName(store.currentStep) }}</h2>
