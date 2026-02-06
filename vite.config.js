@@ -24,7 +24,7 @@ export default defineConfig({
         description: 'Timer app for cooking and productivity',
         theme_color: '#388E3C',
         background_color: '#ffffff',
-        display: 'standalone',
+        display: 'fullscreen',
         icons: [
           {
             src: '/img/icons/android-chrome-192x192.png',
