@@ -23,7 +23,7 @@
             </v-icon>
           </template>
 
-          <v-list-item-title>{{ getName(seq) }}</v-list-item-title>
+          <v-list-item-title>{{ getName(seq) || $t('sequences.defaultName') }}</v-list-item-title>
           <v-list-item-subtitle>
             {{ seq.steps.length }} {{ seq.steps.length !== 1 ? $t('sequences.steps_plural') : $t('sequences.step') }}
             <span v-if="seq.repeatCount === 0"> ({{ $t('sequences.repeat') }})</span>
@@ -64,7 +64,7 @@
       <div v-if="store.waitingForConfirm" class="confirm-screen text-center pa-4">
         <v-icon size="64" color="green-darken-2" class="mb-4">mdi-check-circle</v-icon>
         <h2 class="text-h5 mb-2">{{ $t('sequences.stepComplete') }}</h2>
-        <p class="text-h6 mb-4">{{ getName(store.currentStep) }}</p>
+        <p v-if="getName(store.currentStep)" class="text-h6 mb-4">{{ getName(store.currentStep) }}</p>
 
         <div class="overtime-display mb-6">
           <p class="text-caption text-grey mb-1">{{ $t('sequences.overtime') }}</p>
@@ -73,11 +73,11 @@
 
         <div v-if="store.nextStep" class="next-step mb-6">
           <p class="text-subtitle-1 text-grey">{{ $t('sequences.next') }}</p>
-          <p class="text-h6">{{ getName(store.nextStep) }} - {{ formatDuration(store.nextStep.duration) }}</p>
+          <p class="text-h6"><span v-if="getName(store.nextStep)">{{ getName(store.nextStep) }} - </span>{{ formatDuration(store.nextStep.duration) }}</p>
         </div>
         <div v-else-if="hasMoreRepeats" class="next-step mb-6">
           <p class="text-subtitle-1 text-grey">{{ $t('sequences.repeatOf', { current: store.currentRepeat + 1, total: store.activeSequence?.repeatCount || '∞' }) }}</p>
-          <p class="text-h6">{{ getName(store.activeSequence?.steps[0]) }} - {{ formatDuration(store.activeSequence?.steps[0]?.duration) }}</p>
+          <p class="text-h6"><span v-if="getName(store.activeSequence?.steps[0])">{{ getName(store.activeSequence?.steps[0]) }} - </span>{{ formatDuration(store.activeSequence?.steps[0]?.duration) }}</p>
         </div>
 
         <v-btn
@@ -98,7 +98,7 @@
       <div v-else-if="store.isComplete" class="complete-screen text-center pa-4">
         <v-icon size="64" color="green-darken-2" class="mb-4">mdi-trophy</v-icon>
         <h2 class="text-h5 mb-2">{{ $t('sequences.sequenceComplete') }}</h2>
-        <p class="text-h6 mb-6">{{ getName(store.activeSequence) }}</p>
+        <p class="text-h6 mb-6">{{ getName(store.activeSequence) || $t('sequences.defaultName') }}</p>
 
         <v-btn
           color="green-darken-2"
@@ -126,7 +126,7 @@
           </div>
           <!-- Show step info only when paused -->
           <div v-if="store.isPaused" class="step-info text-center pa-2">
-            <h2 class="text-h5 mb-1">{{ getName(store.currentStep) }}</h2>
+            <h2 v-if="getName(store.currentStep)" class="text-h5 mb-1">{{ getName(store.currentStep) }}</h2>
             <p class="text-caption text-grey">
               {{ $t('sequences.stepOf', { current: store.currentStepIndex + 1, total: store.totalSteps }) }}
               <span v-if="store.activeSequence?.repeatCount !== 1">
@@ -144,7 +144,7 @@
               ({{ $t('sequences.round', { current: store.currentRepeat, total: store.activeSequence?.repeatCount > 0 ? store.activeSequence.repeatCount : '∞' }) }})
             </span>
           </p>
-          <h2 class="text-h4 mb-4">{{ getName(store.currentStep) }}</h2>
+          <h2 v-if="getName(store.currentStep)" class="text-h4 mb-4">{{ getName(store.currentStep) }}</h2>
           <p class="time-display text-h1 font-weight-bold">{{ formattedTime }}</p>
         </div>
 
@@ -305,7 +305,7 @@
       <v-card>
         <v-card-title>{{ $t('import.title') }}</v-card-title>
         <v-card-text v-if="importedSequence">
-          <p class="mb-2"><strong>{{ getName(importedSequence) }}</strong></p>
+          <p class="mb-2"><strong>{{ getName(importedSequence) || $t('sequences.defaultName') }}</strong></p>
           <p class="text-body-2 text-grey mb-2">
             {{ importedSequence.steps.length }} {{ importedSequence.steps.length !== 1 ? $t('sequences.steps_plural') : $t('sequences.step') }}
             <span v-if="importedSequence.repeatCount === 0"> ({{ $t('sequences.repeat') }})</span>
@@ -313,7 +313,7 @@
           </p>
           <v-list density="compact">
             <v-list-item v-for="step in importedSequence.steps" :key="step.id">
-              <v-list-item-title>{{ getName(step) }} - {{ formatDuration(step.duration) }}</v-list-item-title>
+              <v-list-item-title><span v-if="getName(step)">{{ getName(step) }} - </span>{{ formatDuration(step.duration) }}</v-list-item-title>
             </v-list-item>
           </v-list>
         </v-card-text>
@@ -328,7 +328,7 @@
     <!-- Delete Confirmation Dialog -->
     <v-dialog v-model="showDeleteDialog" max-width="350">
       <v-card>
-        <v-card-title>{{ $t('sequences.deleteConfirm', { name: getName(sequenceToDelete) }) }}</v-card-title>
+        <v-card-title>{{ $t('sequences.deleteConfirm', { name: getName(sequenceToDelete) || $t('sequences.defaultName') }) }}</v-card-title>
         <v-card-text>{{ $t('sequences.deleteConfirmText') }}</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -560,18 +560,18 @@ export default {
 
     const saveSequence = () => {
       const steps = editorForm.value.steps
-        .filter(s => s.name && s.durationInput)
+        .filter(s => s.durationInput)
         .map(s => ({
           id: s.id,
-          name: s.name,
+          name: s.name || '',
           nameKey: undefined, // Remove translation key when user edits
           duration: parseTimeInput(s.durationInput) || 60
         }))
 
-      if (!editorForm.value.name || steps.length === 0) return
+      if (steps.length === 0) return
 
       const data = {
-        name: editorForm.value.name,
+        name: editorForm.value.name || '',
         nameKey: undefined, // Remove translation key when user edits
         category: editorForm.value.category,
         repeatCount: parseInt(editorForm.value.repeatCount) || 1,

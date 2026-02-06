@@ -23,6 +23,7 @@
     "steps_plural": "steps",
     "repeat": "repeat",
     "createNew": "Create New",
+    "defaultName": "Timer",
     "overtime": "Time elapsed",
     "stepComplete": "Step Complete!",
     "sequenceComplete": "Sequence Complete!",
