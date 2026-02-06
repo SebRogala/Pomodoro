@@ -294,11 +294,15 @@ export const useSequencesStore = defineStore('sequences', {
   }
 })
 
-// Helper to parse time strings like "1.5m", "90s", "5" (minutes)
+// Helper to parse time strings like "1.5m", "90s", "1m 30s", "5" (minutes)
 export function parseTimeInput(input) {
   if (typeof input === 'number') return input * 60 // assume minutes
 
   const str = String(input).trim().toLowerCase()
+
+  // Combined: "1m 30s", "2m 15sec"
+  const combinedMatch = str.match(/^([\d.]+)\s*m(?:in)?\s+([\d.]+)\s*s(?:ec)?$/)
+  if (combinedMatch) return Math.round(parseFloat(combinedMatch[1]) * 60 + parseFloat(combinedMatch[2]))
 
   // Seconds: "90s", "90sec"
   const secMatch = str.match(/^([\d.]+)\s*s(ec)?$/)
