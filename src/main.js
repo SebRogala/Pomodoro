@@ -26,11 +26,25 @@ app.provide('bus', emitter)
 
 app.mount('#app')
 
-// Register service worker with auto-reload on update
+// Register service worker with auto-reload on update (deferred if any timer is active)
 import { registerSW } from 'virtual:pwa-register'
+import { useSequencesStore } from './stores/sequences'
+const sequences = useSequencesStore()
+
+const isTimerActive = () => sequences.activeSequenceId || settings.timerRunning
+
 registerSW({
   onNeedRefresh() {
-    window.location.reload()
+    if (!isTimerActive()) {
+      window.location.reload()
+    } else {
+      const unwatch = watch(isTimerActive, (active) => {
+        if (!active) {
+          unwatch()
+          window.location.reload()
+        }
+      })
+    }
   }
 })
 
