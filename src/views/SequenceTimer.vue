@@ -62,14 +62,9 @@
     <div v-else class="active-sequence">
       <!-- Waiting for confirm -->
       <div v-if="store.waitingForConfirm" class="confirm-screen text-center pa-4">
-        <v-icon size="64" color="green-darken-2" class="mb-4">mdi-check-circle</v-icon>
-        <h2 class="text-h5 mb-2">{{ $t('sequences.stepComplete') }}</h2>
         <p v-if="getName(store.currentStep)" class="text-h6 mb-4">{{ getName(store.currentStep) }}</p>
 
-        <div class="overtime-display mb-6">
-          <p class="text-caption text-grey mb-1">{{ $t('sequences.overtime') }}</p>
-          <p class="overtime-time">+{{ formattedOvertime }}</p>
-        </div>
+        <OvertimeDisplay :formatted="formattedOvertime" />
 
         <div v-if="store.nextStep" class="next-step mb-6">
           <p class="text-subtitle-1 text-grey">{{ $t('sequences.next') }}</p>
@@ -96,16 +91,17 @@
 
       <!-- Sequence complete -->
       <div v-else-if="store.isComplete" class="complete-screen text-center pa-4">
-        <v-icon size="64" color="green-darken-2" class="mb-4">mdi-trophy</v-icon>
-        <h2 class="text-h5 mb-2">{{ $t('sequences.sequenceComplete') }}</h2>
-        <p class="text-h6 mb-6">{{ getName(store.activeSequence) || $t('sequences.defaultName') }}</p>
+        <p v-if="getName(store.activeSequence)" class="text-h6 mb-4">{{ getName(store.activeSequence) }}</p>
+
+        <OvertimeDisplay :formatted="formattedOvertime" />
 
         <v-btn
           color="green-darken-2"
-          class="mb-2"
+          size="x-large"
           @click="restartSequence"
+          class="mb-4"
         >
-          {{ $t('sequences.startAgain') }}
+          {{ $t('timer.start') }}
         </v-btn>
         <br>
         <v-btn variant="text" @click="store.stopSequence()">
@@ -354,11 +350,13 @@ import { useTimerSize } from '@/composables/useTimerSize'
 import { useSettingsControls } from '@/composables/useSettingsControls'
 import { useAudio } from '@/composables/useAudio'
 import CircularProgress from '@/components/CircularProgress.vue'
+import OvertimeDisplay from '@/components/OvertimeDisplay.vue'
 
 export default {
   name: 'SequenceTimer',
   components: {
-    CircularProgress
+    CircularProgress,
+    OvertimeDisplay
   },
   setup() {
     const { t, locale } = useI18n()
@@ -678,14 +676,6 @@ export default {
 
 .time-display {
   font-variant-numeric: tabular-nums;
-}
-
-.overtime-time {
-  font-size: 3rem;
-  font-weight: bold;
-  font-variant-numeric: tabular-nums;
-  color: #E65100;
-  line-height: 1;
 }
 
 .confirm-screen,

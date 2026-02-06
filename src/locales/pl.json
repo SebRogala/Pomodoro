@@ -30,7 +30,7 @@
     "next": "Następny:",
     "repeatOf": "Powtórzenie {current} z {total}",
     "startNext": "Rozpocznij następny",
-    "stopSequence": "Zatrzymaj sekwencję",
+    "stopSequence": "Powrót",
     "startAgain": "Zacznij od nowa",
     "chooseAnother": "Wybierz inną",
     "stepOf": "Krok {current} z {total}",
