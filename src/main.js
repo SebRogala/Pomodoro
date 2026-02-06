@@ -26,6 +26,14 @@ app.provide('bus', emitter)
 
 app.mount('#app')
 
+// Register service worker with auto-reload on update
+import { registerSW } from 'virtual:pwa-register'
+registerSW({
+  onNeedRefresh() {
+    window.location.reload()
+  }
+})
+
 // Sync language from settings store after mount
 import { useSettingsStore } from './stores/settings'
 const settings = useSettingsStore()
