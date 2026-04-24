@@ -43,7 +43,7 @@ npm run build
 
 ## Deployment
 
-Auto-deploys to CapRover on push to master branch via GitHub webhook.
+Auto-deploys to [Coolify](https://coolify.io) on push to `main` via GitHub webhook. Coolify builds from `Dockerfile` and serves via the bundled nginx on port `80`.
 
 ```bash
 # Local Docker build (optional)
