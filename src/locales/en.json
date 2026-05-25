@@ -18,6 +18,7 @@
     "title": "Sequences",
     "cooking": "Cooking",
     "productivity": "Productivity",
+    "talk": "Talk",
     "steps": "Steps",
     "step": "step",
     "steps_plural": "steps",
@@ -43,6 +44,7 @@
     "deleteConfirmText": "This action cannot be undone.",
     "delete": "Delete",
     "defaults": {
+      "talkExample": "Sample Talk",
       "softBoiledEgg": "Soft Boiled Egg",
       "mediumBoiledEgg": "Medium Boiled Egg",
       "hardBoiledEgg": "Hard Boiled Egg",
@@ -57,7 +59,11 @@
         "sideB": "Side B",
         "rest": "Rest",
         "focus": "Focus",
-        "break": "Break"
+        "break": "Break",
+        "intro": "Intro",
+        "body": "Body",
+        "demo": "Demo",
+        "qa": "Q&A"
       }
     }
   },
@@ -71,6 +77,7 @@
     "steps": "Steps",
     "name": "Name",
     "duration": "Duration",
+    "color": "Color",
     "addStep": "Add Step",
     "cancel": "Cancel",
     "save": "Save"

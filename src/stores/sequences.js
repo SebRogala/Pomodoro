@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 
 // Current migration version - increment when adding new defaults
-const CURRENT_MIGRATION_VERSION = 1
+const CURRENT_MIGRATION_VERSION = 2
 
 export const useSequencesStore = defineStore('sequences', {
   state: () => ({
@@ -280,6 +280,21 @@ export const useSequencesStore = defineStore('sequences', {
         defaults.forEach(seq => this.addSequence(seq))
       }
 
+      // Migration 2: Add a sample talk-mode sequence
+      if (this.migrationVersion < 2) {
+        this.addSequence({
+          nameKey: 'defaults.talkExample',
+          category: 'talk',
+          steps: [
+            { id: '1', nameKey: 'defaults.steps.intro', duration: 300, color: '#2e7d32' },
+            { id: '2', nameKey: 'defaults.steps.body', duration: 1500, color: '#1565c0' },
+            { id: '3', nameKey: 'defaults.steps.demo', duration: 600, color: '#ef6c00' },
+            { id: '4', nameKey: 'defaults.steps.qa', duration: 600, color: '#6a1b9a' }
+          ],
+          repeatCount: 1
+        })
+      }
+
       this.migrationVersion = CURRENT_MIGRATION_VERSION
     },
 
@@ -330,4 +345,21 @@ export function getDisplayName(item, t) {
   if (item.name) return item.name
   if (item.nameKey) return t(`sequences.${item.nameKey}`)
   return ''
+}
+
+// Tuned for visibility against the red clock background.
+export const TALK_COLORS = [
+  '#c62828', // red
+  '#ef6c00', // orange
+  '#f9a825', // amber
+  '#2e7d32', // green
+  '#00838f', // teal
+  '#1565c0', // blue
+  '#6a1b9a', // purple
+  '#ad1457'  // pink
+]
+
+export function getStepColor(step, index) {
+  if (step && step.color) return step.color
+  return TALK_COLORS[index % TALK_COLORS.length]
 }

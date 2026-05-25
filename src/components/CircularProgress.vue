@@ -18,11 +18,17 @@ export default {
     },
     remainingSeconds: {
       type: Number,
-      required: true
+      default: 0
     },
     totalSeconds: {
       type: Number,
-      required: true
+      default: 0
+    },
+    // [{ seconds, color, label }]. Total <= 3600. First entry is the active
+    // (shrinking) segment.
+    segments: {
+      type: Array,
+      default: null
     }
   },
   setup(props) {
@@ -32,8 +38,84 @@ export default {
     const strokeColor = '#950703'
     const constantsColor = '#000000'
 
-    const degToRad = (degree) => {
-      return degree * (Math.PI / 180)
+    const degToRad = (degree) => degree * (Math.PI / 180)
+
+    const drawCenterDot = () => {
+      ctx.value.strokeStyle = constantsColor
+      ctx.value.lineWidth = 10
+      ctx.value.beginPath()
+      ctx.value.arc(props.size / 2, props.size / 2, 5, degToRad(0), degToRad(360))
+      ctx.value.stroke()
+    }
+
+    const renderSingle = (lineWidth) => {
+      const minutesRemaining = props.remainingSeconds / 60
+      if (minutesRemaining <= 0) return
+
+      ctx.value.lineWidth = lineWidth
+      ctx.value.strokeStyle = strokeColor
+      ctx.value.beginPath()
+      ctx.value.arc(
+        props.size / 2,
+        props.size / 2,
+        lineWidth / 2,
+        degToRad(-(minutesRemaining * 6) - 90),
+        degToRad(-90)
+      )
+      ctx.value.stroke()
+    }
+
+    const renderSegmented = (lineWidth) => {
+      const cx = props.size / 2
+      const cy = props.size / 2
+      const arcRadius = lineWidth / 2
+      const outerRadius = lineWidth
+
+      // 3600s mapped to 360deg → 1s = 0.1deg.
+      let cumDeg = -90
+      const boundaries = [cumDeg]
+      for (const seg of props.segments) {
+        const segDeg = seg.seconds * 0.1
+        if (segDeg <= 0) continue
+        const endDeg = cumDeg
+        const startDeg = cumDeg - segDeg
+        ctx.value.lineWidth = lineWidth
+        ctx.value.strokeStyle = seg.color || strokeColor
+        ctx.value.beginPath()
+        ctx.value.arc(cx, cy, arcRadius, degToRad(startDeg), degToRad(endDeg))
+        ctx.value.stroke()
+        cumDeg = startDeg
+        boundaries.push(cumDeg)
+      }
+
+      // Skip the outermost edge so the clock-face start tick remains clean.
+      ctx.value.strokeStyle = '#ffffff'
+      ctx.value.lineWidth = Math.max(2, props.size * 0.008)
+      for (let i = 1; i < boundaries.length - 1; i++) {
+        const a = degToRad(boundaries[i])
+        ctx.value.beginPath()
+        ctx.value.moveTo(cx, cy)
+        ctx.value.lineTo(cx + outerRadius * Math.cos(a), cy + outerRadius * Math.sin(a))
+        ctx.value.stroke()
+      }
+
+      // Skip segments under 3 min (18°) — too narrow to read.
+      const fontPx = Math.max(11, Math.round(props.size * 0.045))
+      ctx.value.font = `bold ${fontPx}px sans-serif`
+      ctx.value.textAlign = 'center'
+      ctx.value.textBaseline = 'middle'
+      ctx.value.fillStyle = '#ffffff'
+      let labelCum = -90
+      for (const seg of props.segments) {
+        const segDeg = seg.seconds * 0.1
+        if (segDeg >= 18 && seg.label) {
+          const midDeg = labelCum - segDeg / 2
+          const labelRadius = outerRadius * 0.62
+          const a = degToRad(midDeg)
+          ctx.value.fillText(seg.label, cx + labelRadius * Math.cos(a), cy + labelRadius * Math.sin(a))
+        }
+        labelCum -= segDeg
+      }
     }
 
     const render = () => {
@@ -41,34 +123,16 @@ export default {
 
       const lineWidth = (props.size / 2) - props.size * 0.115
 
-      // Clear canvas
       ctx.value.fillStyle = 'white'
       ctx.value.fillRect(0, 0, props.size, props.size)
 
-      // Calculate minutes remaining for clock-like display
-      const minutesRemaining = props.remainingSeconds / 60
-
-      // Only draw arc if there's time to show
-      if (minutesRemaining > 0) {
-        ctx.value.lineWidth = lineWidth
-        ctx.value.strokeStyle = strokeColor
-        ctx.value.beginPath()
-        ctx.value.arc(
-          props.size / 2,
-          props.size / 2,
-          lineWidth / 2,
-          degToRad(-(minutesRemaining * 6) - 90),
-          degToRad(-90)
-        )
-        ctx.value.stroke()
+      if (props.segments && props.segments.length > 0) {
+        renderSegmented(lineWidth)
+      } else {
+        renderSingle(lineWidth)
       }
 
-      // Draw center dot
-      ctx.value.strokeStyle = constantsColor
-      ctx.value.lineWidth = 10
-      ctx.value.beginPath()
-      ctx.value.arc(props.size / 2, props.size / 2, 5, degToRad(0), degToRad(360))
-      ctx.value.stroke()
+      drawCenterDot()
     }
 
     onMounted(async () => {
@@ -77,10 +141,10 @@ export default {
       render()
     })
 
-    // Rely on Vue reactivity - watch props changes instead of polling
     watch(() => props.size, render)
     watch(() => props.remainingSeconds, render)
     watch(() => props.totalSeconds, render)
+    watch(() => props.segments, render, { deep: true })
 
     return {
       canvasRef,

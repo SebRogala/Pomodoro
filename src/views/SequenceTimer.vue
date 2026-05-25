@@ -7,6 +7,7 @@
       <v-tabs v-model="activeTab" color="green-darken-2" class="mb-4">
         <v-tab value="cooking">{{ $t('sequences.cooking') }}</v-tab>
         <v-tab value="productivity">{{ $t('sequences.productivity') }}</v-tab>
+        <v-tab value="talk">{{ $t('sequences.talk') }}</v-tab>
       </v-tabs>
 
       <v-list lines="two">
@@ -18,8 +19,8 @@
           rounded
         >
           <template v-slot:prepend>
-            <v-icon :color="seq.category === 'cooking' ? 'orange-darken-2' : 'blue-darken-2'">
-              {{ seq.category === 'cooking' ? 'mdi-pot-steam' : 'mdi-timer-outline' }}
+            <v-icon :color="categoryIconColor(seq.category)">
+              {{ categoryIcon(seq.category) }}
             </v-icon>
           </template>
 
@@ -111,13 +112,14 @@
 
       <!-- Running step -->
       <div v-else class="running-step">
-        <!-- Productivity: Circular timer -->
-        <div v-if="isProductivity" class="productivity-timer">
+        <!-- Productivity / Talk: Circular timer -->
+        <div v-if="isCircular" class="productivity-timer">
           <div class="circular-timer-container">
             <CircularProgress
               :size="circularSize"
               :remaining-seconds="remainingSeconds"
               :total-seconds="store.currentStep?.duration || 0"
+              :segments="talkSegments"
             />
           </div>
           <!-- Show step info only when paused -->
@@ -132,7 +134,7 @@
           </div>
         </div>
 
-        <!-- Cooking: Linear progress -->
+        <!-- Linear progress (cooking, custom) -->
         <div v-else class="step-info text-center pa-4">
           <p v-if="store.totalSteps > 1 || store.activeSequence?.repeatCount !== 1" class="text-subtitle-1 text-grey mb-2">
             <span v-if="store.totalSteps > 1">{{ $t('sequences.stepOf', { current: store.currentStepIndex + 1, total: store.totalSteps }) }}</span>
@@ -144,8 +146,8 @@
           <p class="time-display text-h1 font-weight-bold">{{ formattedTime }}</p>
         </div>
 
-        <!-- Progress bar (cooking only) -->
-        <div v-if="!isProductivity" class="progress-container pa-4">
+        <!-- Progress bar (linear only) -->
+        <div v-if="!isCircular" class="progress-container pa-4">
           <v-progress-linear
             :model-value="progressPercent"
             color="green-darken-2"
@@ -248,6 +250,26 @@
             :key="step.id"
             class="step-row d-flex align-center mb-2"
           >
+            <div v-if="editorForm.category === 'talk'" class="swatch-wrapper mr-2">
+              <button
+                type="button"
+                class="color-swatch"
+                :style="{ background: stepColor(step, index) }"
+                :aria-label="$t('editor.color')"
+                @click.stop="openSwatchFor = openSwatchFor === step.id ? null : step.id"
+              ></button>
+              <div v-if="openSwatchFor === step.id" class="swatch-popover" @click.stop>
+                <button
+                  v-for="c in talkColors"
+                  :key="c"
+                  type="button"
+                  class="color-swatch ma-1"
+                  :class="{ 'is-selected': stepColor(step, index) === c }"
+                  :style="{ background: c }"
+                  @click="step.color = c; openSwatchFor = null"
+                ></button>
+              </div>
+            </div>
             <v-text-field
               v-model="step.name"
               :label="$t('editor.name')"
@@ -344,7 +366,7 @@
 <script>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useSequencesStore, formatDuration, parseTimeInput, getDisplayName } from '@/stores/sequences'
+import { useSequencesStore, formatDuration, parseTimeInput, getDisplayName, TALK_COLORS, getStepColor } from '@/stores/sequences'
 import { getSequenceFromCurrentUrl, clearSequenceFromUrl, copySequenceUrl } from '@/utils/sequenceUrl'
 import { useTimerSize } from '@/composables/useTimerSize'
 import { useSettingsControls } from '@/composables/useSettingsControls'
@@ -377,6 +399,7 @@ export default {
     const snackbarText = ref('')
     const showDeleteDialog = ref(false)
     const sequenceToDelete = ref(null)
+    const openSwatchFor = ref(null)
 
     const editorForm = ref({
       name: '',
@@ -431,6 +454,67 @@ export default {
       return store.activeSequence?.category === 'productivity'
     })
 
+    const isTalk = computed(() => {
+      return store.activeSequence?.category === 'talk'
+    })
+
+    const isCircular = computed(() => isProductivity.value || isTalk.value)
+
+    // Build a sliding 60-min window of segments starting at the active step's
+    // remaining time, walking forward through the sequence (and repeats).
+    // Each tick the active segment shrinks; once total < 3600s, more of the
+    // tail becomes visible.
+    const talkSegments = computed(() => {
+      const _ = tickCounter.value
+      const seq = store.activeSequence
+      if (!seq || seq.category !== 'talk') return null
+
+      const current = store.currentStep
+      if (!current) return null
+
+      const MAX_SEC = 3600
+      const result = []
+      let totalSec = 0
+
+      const remainingSec = Math.max(0, Math.ceil(store.getRemainingTime() / 1000))
+      if (remainingSec > 0) {
+        const useSec = Math.min(remainingSec, MAX_SEC)
+        result.push({
+          seconds: useSec,
+          color: getStepColor(current, store.currentStepIndex),
+          label: `${store.currentStepIndex + 1}${getName(current) ? '. ' + getName(current) : ''}`
+        })
+        totalSec += useSec
+      }
+
+      let idx = store.currentStepIndex + 1
+      let repeat = store.currentRepeat
+      let safety = 1000
+      while (totalSec < MAX_SEC && safety-- > 0) {
+        if (idx >= seq.steps.length) {
+          if (seq.repeatCount === 0 || repeat < seq.repeatCount) {
+            idx = 0
+            repeat++
+          } else {
+            break
+          }
+        }
+        const step = seq.steps[idx]
+        const available = MAX_SEC - totalSec
+        const useSec = Math.min(step.duration, available)
+        if (useSec <= 0) break
+        result.push({
+          seconds: useSec,
+          color: getStepColor(step, idx),
+          label: `${idx + 1}${getName(step) ? '. ' + getName(step) : ''}`
+        })
+        totalSec += useSec
+        idx++
+      }
+
+      return result
+    })
+
     const remainingSeconds = computed(() => {
       const _ = tickCounter.value
       return Math.ceil(store.getRemainingTime() / 1000)
@@ -441,8 +525,24 @@ export default {
 
     const categoryOptions = computed(() => [
       { title: t('sequences.cooking'), value: 'cooking' },
-      { title: t('sequences.productivity'), value: 'productivity' }
+      { title: t('sequences.productivity'), value: 'productivity' },
+      { title: t('sequences.talk'), value: 'talk' }
     ])
+
+    const categoryIcon = (category) => {
+      if (category === 'cooking') return 'mdi-pot-steam'
+      if (category === 'talk') return 'mdi-microphone'
+      return 'mdi-timer-outline'
+    }
+
+    const categoryIconColor = (category) => {
+      if (category === 'cooking') return 'orange-darken-2'
+      if (category === 'talk') return 'purple-darken-2'
+      return 'blue-darken-2'
+    }
+
+    const stepColor = (step, index) => getStepColor(step, index)
+    const talkColors = TALK_COLORS
 
     // Helper to get translated name for sequence or step
     const getName = (item) => getDisplayName(item, t)
@@ -526,7 +626,8 @@ export default {
         steps: seq.steps.map(s => ({
           id: s.id,
           name: getName(s),
-          durationInput: formatDuration(s.duration)
+          durationInput: formatDuration(s.duration),
+          color: s.color
         }))
       }
       showEditor.value = true
@@ -547,6 +648,7 @@ export default {
     const closeEditor = () => {
       showEditor.value = false
       editingSequence.value = null
+      openSwatchFor.value = null
       editorForm.value = {
         name: '',
         category: 'cooking',
@@ -563,7 +665,8 @@ export default {
           id: s.id,
           name: s.name || '',
           nameKey: undefined, // Remove translation key when user edits
-          duration: parseTimeInput(s.durationInput) || 60
+          duration: parseTimeInput(s.durationInput) || 60,
+          color: s.color || undefined
         }))
 
       if (steps.length === 0) return
@@ -606,6 +709,12 @@ export default {
       settings.setTimerRunning(active)
     }, { immediate: true })
 
+    const closeSwatchOnOutsideClick = () => { openSwatchFor.value = null }
+    watch(openSwatchFor, (id) => {
+      if (id) document.addEventListener('click', closeSwatchOnOutsideClick)
+      else document.removeEventListener('click', closeSwatchOnOutsideClick)
+    })
+
     onMounted(() => {
       store.initDefaults()
       initAudio()
@@ -615,6 +724,7 @@ export default {
 
     onBeforeUnmount(() => {
       clearInterval(tickInterval.value)
+      document.removeEventListener('click', closeSwatchOnOutsideClick)
       settings.setTimerRunning(false) // Reset when leaving
     })
 
@@ -631,10 +741,18 @@ export default {
       progressPercent,
       hasMoreRepeats,
       isProductivity,
+      isTalk,
+      isCircular,
+      talkSegments,
       isSequenceActive,
       remainingSeconds,
       circularSize,
       categoryOptions,
+      categoryIcon,
+      categoryIconColor,
+      stepColor,
+      talkColors,
+      openSwatchFor,
       formatDuration,
       getName,
       startSequence,
@@ -720,5 +838,40 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  padding: 0;
+  flex: 0 0 auto;
+
+  &.is-selected {
+    border-color: rgba(0, 0, 0, 0.7);
+    box-shadow: 0 0 0 2px white inset;
+  }
+}
+
+.swatch-wrapper {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.swatch-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 10;
+  margin-top: 4px;
+  padding: 4px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 168px;
 }
 </style>

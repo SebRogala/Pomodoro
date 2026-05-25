@@ -18,6 +18,7 @@
     "title": "Sekwencje",
     "cooking": "Gotowanie",
     "productivity": "Produktywność",
+    "talk": "Prelekcja",
     "steps": "Kroki",
     "step": "krok",
     "steps_plural": "kroków",
@@ -43,6 +44,7 @@
     "deleteConfirmText": "Tej akcji nie można cofnąć.",
     "delete": "Usuń",
     "defaults": {
+      "talkExample": "Przykładowa prelekcja",
       "softBoiledEgg": "Jajko na miękko",
       "mediumBoiledEgg": "Jajko na średnio",
       "hardBoiledEgg": "Jajko na twardo",
@@ -57,7 +59,11 @@
         "sideB": "Strona B",
         "rest": "Odpocznij",
         "focus": "Praca",
-        "break": "Przerwa"
+        "break": "Przerwa",
+        "intro": "Wstęp",
+        "body": "Treść",
+        "demo": "Demo",
+        "qa": "Pytania"
       }
     }
   },
@@ -71,6 +77,7 @@
     "steps": "Kroki",
     "name": "Nazwa",
     "duration": "Czas trwania",
+    "color": "Kolor",
     "addStep": "Dodaj krok",
     "cancel": "Anuluj",
     "save": "Zapisz"
